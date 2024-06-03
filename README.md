@@ -1,6 +1,41 @@
 <a href="https://arxiv.org/abs/2105.05874" alt="Citation"><img src="https://img.shields.io/badge/cite-citation-blue" /></a>
 <a href="https://twitter.com/FeTS_Challenge" alt="Citation"><img src="https://img.shields.io/twitter/follow/fets_challenge?style=social" /></a>
 
+```
+SimpleITK==2.2.1
+Pillow==8.4.0
+
+git clone https://github.com/intel/openfl.git && cd openfl && git checkout f4b28d710e2be31cdfa7487fdb4e8cb3a1387a5f
+setup.py 에서 open utf-8 로 수정
+pip install .
+cd ..
+
+
+git clone https://github.com/CBICA/GaNDLF.git && cd GaNDLF && git checkout e4d0d4bfdf4076130817001a98dfb90189956278
+git submodule update --init --recursive
+pip install .
+cd ..
+
+
+git clone https://github.com/FETS-AI/Algorithms.git fets && cd fets && git checkout fets_challenge
+.gitmodules 에서 GANDLF 로 폴더명 변경 (url 의 대소문자는 구분하지 않아서 문제없음)
+git submodule update --init --recursive
+pip install .
+cd ..
+
+setup.py 에 있는 설치패키지 모두 주석처리 후
+
+    install_requires=[
+        # 'openfl @ git+https://github.com/intel/openfl.git@f4b28d710e2be31cdfa7487fdb4e8cb3a1387a5f',
+        # 'GANDLF @ git+https://github.com/CBICA/GaNDLF.git@e4d0d4bfdf4076130817001a98dfb90189956278',
+        # 'fets @ git+https://github.com/FETS-AI/Algorithms.git@fets_challenge',
+    ],
+
+pip install .
+```
+
+
+
 # Federated Tumor Segmentation Challenge
 
 The repo for the FeTS Challenge: The 1st Computational Competition on Federated Learning.
