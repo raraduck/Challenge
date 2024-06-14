@@ -20,6 +20,7 @@ cd ..
 git clone https://github.com/FETS-AI/Algorithms.git fets && cd fets && git checkout fets_challenge
 .gitmodules 에서 GANDLF 로 폴더명 변경 (url 의 대소문자는 구분하지 않아서 문제없음)
 git submodule update --init --recursive
+export SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL=True
 pip install .
 cd ..
 
