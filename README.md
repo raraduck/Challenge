@@ -33,6 +33,7 @@ setup.py 에 있는 설치패키지 모두 주석처리 후
     ],
 
 pip install .
+export CUDA_VISIBLE_DEVICES=0
 ```
 
 
