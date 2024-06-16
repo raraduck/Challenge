@@ -58,6 +58,25 @@ from fets_challenge.experiment import logger
 
 # # Custom Collaborator Training Selection
 # By default, all collaborators will be selected for training each round, but you can easily add your own logic to select a different set of collaborators based on custom criteria. An example is provided below for selecting a single collaborator on odd rounds that had the fastest training time (`one_collaborator_on_odd_rounds`).
+def major_minor_collaborator_on_rounds(collaborators,
+                            db_iterator,
+                            fl_round,
+                            collaborators_chosen_each_round,
+                            collaborator_times_per_round):
+    logger.info("major_minor_collaborator_on_rounds called!")
+    if fl_round < 3:
+        training_collaborators = [
+        1,  2,  3, 24, 25, 26
+        ]
+    else:
+        training_collaborators = [
+            10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
+            29, 19, 31, 11, 17,
+            16, 30, 18, 23, 14,
+            12, 32, 20,  4, 33, 27, 13
+        ]
+    return [str(el) for el in training_collaborators]
+
 
 
 # a very simple function. Everyone trains every round.
@@ -131,6 +150,20 @@ def one_collaborator_on_odd_rounds(collaborators,
 # Different hyperparameters can be specified for collaborators for different rounds but they remain the same for all the collaborators that are chosen for that particular round. In simpler words, collaborators can not have different hyperparameters for the same round.
 
 # This simple example uses constant hyper-parameters through the experiment
+def major_minor_parameters(collaborators,
+                              db_iterator,
+                              fl_round,
+                              collaborators_chosen_each_round,
+                              collaborator_times_per_round):
+    if fl_round < 3:
+        epochs_per_round = 4
+        learning_rate = 1e-3
+        return (learning_rate, epochs_per_round)
+    else:
+        epochs_per_round = 1
+        learning_rate = 1e-4
+        return (learning_rate, epochs_per_round)
+
 def constant_hyper_parameters(collaborators,
                               db_iterator,
                               fl_round,
@@ -152,7 +185,7 @@ def constant_hyper_parameters(collaborators,
     # they were tuned using a set of data that UPenn had access to, not on the federation itself
     # they worked pretty well for us, but we think you can do better :)
     epochs_per_round = 1
-    learning_rate = 5e-5
+    learning_rate = 1e-3
     return (learning_rate, epochs_per_round)
 
 
@@ -176,14 +209,14 @@ def train_less_each_round(collaborators,
     """
 
     # we'll have a constant learning_rate
-    learning_rate = 5e-5
+    learning_rate = 1e-3
     
     # our epochs per round will start at 1.0 and decay by 0.9 for the first 10 rounds
     epochs_per_round = 1.0
     decay = min(fl_round, 10)
     decay = 0.9 ** decay
     epochs_per_round *= decay    
-    epochs_per_round = int(epochs_per_round)
+    epochs_per_round = max(1,int(epochs_per_round))
     
     return (learning_rate, epochs_per_round)
 
@@ -510,38 +543,39 @@ def FedAvgM_Selection(local_tensors,
 
 # change any of these you wish to your custom functions. You may leave defaults if you wish.
 aggregation_function = weighted_average_aggregation
-choose_training_collaborators = all_collaborators_train
-training_hyper_parameters_for_round = constant_hyper_parameters
+choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
+training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
 
 # As mentioned in the 'Custom Aggregation Functions' section (above), six 
 # perfomance evaluation metrics are included by default for validation outputs in addition 
 # to those you specify immediately above. Changing the below value to False will change 
 # this fact, excluding the three hausdorff measurements. As hausdorff distance is 
 # expensive to compute, excluding them will speed up your experiments.
-include_validation_with_hausdorff=True
+include_validation_with_hausdorff=False
 
 # We encourage participants to experiment with partitioning_1 and partitioning_2, as well as to create
 # other partitionings to test your changes for generalization to multiple partitionings.
 #institution_split_csv_filename = 'partitioning_1.csv'
-institution_split_csv_filename = 'small_split.csv'
+# institution_split_csv_filename = 'small_split.csv'
+institution_split_csv_filename = 'FeTS2_stage1_2.csv'
 
 # change this to point to the parent directory of the data
-brats_training_data_parent_dir = '/raid/datasets/FeTS22/MICCAI_FeTS2022_TrainingData'
+brats_training_data_parent_dir = '/home2/jennyk0321/2024_data/FeTS2022/center'
 
 # increase this if you need a longer history for your algorithms
 # decrease this if you need to reduce system RAM consumption
 db_store_rounds = 5
 
 # this is passed to PyTorch, so set it accordingly for your system
-device = 'cpu'
+device = 'cuda'
 
 # you'll want to increase this most likely. You can set it as high as you like, 
 # however, the experiment will exit once the simulated time exceeds one week. 
-rounds_to_train = 5
+rounds_to_train = 20
 
 # (bool) Determines whether checkpoints should be saved during the experiment. 
 # The checkpoints can grow quite large (5-10GB) so only the latest will be saved when this parameter is enabled
-save_checkpoints = True
+save_checkpoints = False
 
 # path to previous checkpoint folder for experiment that was stopped before completion. 
 # Checkpoints are stored in ~/.local/workspace/checkpoint, and you should provide the experiment directory 
@@ -587,9 +621,10 @@ home = str(Path.home())
 # you will need to specify the correct experiment folder and the parent directory for
 # the data you want to run inference over (assumed to be the experiment that just completed)
 
-#checkpoint_folder='experiment_1'
+checkpoint_folder='FeTS2_stage1_2'
+os.makedirs(os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder), exist_ok=True)
 #data_path = </PATH/TO/CHALLENGE_VALIDATION_DATA>
-data_path = '/home/brats/MICCAI_FeTS2022_ValidationData'
+data_path = brats_training_data_parent_dir
 validation_csv_filename = 'validation.csv'
 
 # you can keep these the same if you wish

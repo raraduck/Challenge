@@ -264,6 +264,7 @@ def run_challenge_experiment(aggregation_function,
 
     # Update the plan if necessary
     plan = fx.update_plan(overrides)
+    plan.config['task_runner']['settings']['fets_config_dict']['batch_size'] = 16
 
     if not include_validation_with_hausdorff:
         plan.config['task_runner']['settings']['fets_config_dict']['metrics'] = ['dice','dice_per_label']
