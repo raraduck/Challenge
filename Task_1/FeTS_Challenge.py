@@ -58,6 +58,8 @@ from fets_challenge.experiment import logger
 
 # # Custom Collaborator Training Selection
 # By default, all collaborators will be selected for training each round, but you can easily add your own logic to select a different set of collaborators based on custom criteria. An example is provided below for selecting a single collaborator on odd rounds that had the fastest training time (`one_collaborator_on_odd_rounds`).
+brats_training_data_parent_dir = '/home2/dwnusa/2024_data/FeTS2022/center'
+device = 'cuda'
 if sys.argv[1] == 'train':
     
     def major_minor_collaborator_on_rounds(collaborators,
@@ -562,14 +564,14 @@ if sys.argv[1] == 'train':
     institution_split_csv_filename = 'FeTS2_stage1_2.csv'
     
     # change this to point to the parent directory of the data
-    brats_training_data_parent_dir = '/home2/dwnusa/2024_data/FeTS2022/center'
+    # brats_training_data_parent_dir = '/home2/dwnusa/2024_data/FeTS2022/center'
     
     # increase this if you need a longer history for your algorithms
     # decrease this if you need to reduce system RAM consumption
     db_store_rounds = 5
     
     # this is passed to PyTorch, so set it accordingly for your system
-    device = 'cuda'
+    # device = 'cuda'
     
     # you'll want to increase this most likely. You can set it as high as you like, 
     # however, the experiment will exit once the simulated time exceeds one week. 
@@ -623,7 +625,7 @@ elif sys.argv[1] == 'infer':
     # you will need to specify the correct experiment folder and the parent directory for
     # the data you want to run inference over (assumed to be the experiment that just completed)
     
-    checkpoint_folder='FeTS2_stage1_2'
+    checkpoint_folder='experiment_'
     os.makedirs(os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder), exist_ok=True)
     #data_path = </PATH/TO/CHALLENGE_VALIDATION_DATA>
     data_path = brats_training_data_parent_dir
