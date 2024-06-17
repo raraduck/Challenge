@@ -535,8 +535,8 @@ elif sys.argv[1] == 'infer':
     # the data you want to run inference over (assumed to be the experiment that just completed)
     
     checkpoint_folder=f'{sys.argv[2]}'# 'experiment_'
-    assert os.path.isdir(checkpoint_folder), f"{sys.argv[2]} not exist"
     os.makedirs(os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder), exist_ok=True)
+    assert os.path.isdir(os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder)), f"{sys.argv[2]} not exist"
     #data_path = </PATH/TO/CHALLENGE_VALIDATION_DATA>
     data_path = brats_training_data_parent_dir
     # validation_csv_filename = 'validation.csv'
