@@ -4,16 +4,19 @@
 import os
 import numpy as np
 import sys
+import shutil
 from pathlib import Path
 from fets_challenge import run_challenge_experiment
 from fets_challenge.experiment import logger
 
 home = str(Path.home())
-workspace = 'workspace2'
-chdir = os.path.join(home, '.local', workspace)
+workspace = sys.argv[3].split('.')[0]
+srcdir = os.path.join(home, '.local', 'workspace')
+trgdir = os.path.join(home, '.local', workspace)
+shutil.copytree(srcdir, trgdir)
 # os.makedirs(chdir, exist_ok=True)
-assert os.path.exists(chdir), f"chdir not exist"
-os.chdir(chdir)
+assert os.path.exists(trgdir), f"chdir not exist"
+os.chdir(trgdir)
 
 brats_training_data_parent_dir = f'/home2/{os.getlogin()}/2024_data/FeTS2022/center'
 assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_training_data_parent_dir}"
