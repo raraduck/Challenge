@@ -425,7 +425,7 @@ if sys.argv[1] == 'train':
     
     
     # change any of these you wish to your custom functions. You may leave defaults if you wish.
-    aggregation_function = weighted_average_aggregation
+    aggregation_function = FedAvgM_Selection # weighted_average_aggregation
     choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
     training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
     
