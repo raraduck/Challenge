@@ -95,7 +95,7 @@ if sys.argv[1] == 'train':
             training_collaborators = [
                 subset1, subset18, *others
             ]
-        elif institution_split_csv_filename in ['FeTS2_idea2.csv']:
+        elif institution_split_csv_filename in ['FeTS2_idea1.csv']:
             inst1 =  [100, 101, 102, 103, 104]
             inst2 =  [200, 201, 202, 203, 204]
             inst3 =  [300, 301, 302, 303, 304]
