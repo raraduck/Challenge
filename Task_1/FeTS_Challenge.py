@@ -75,11 +75,11 @@ if sys.argv[1] == 'train':
                 ]
             elif fl_round % 5 == 1:
                 training_collaborators = [
-                3
+                1
                 ]
             elif fl_round % 5 == 3:
                 training_collaborators = [
-                24
+                18
                 ]
             #else:
                 #training_collaborators = [
