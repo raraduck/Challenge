@@ -4,13 +4,18 @@
 import os
 import numpy as np
 import sys
+from pathlib import Path
 from fets_challenge import run_challenge_experiment
 from fets_challenge.experiment import logger
 
 brats_training_data_parent_dir = f'/home2/{os.getlogin()}/2024_data/FeTS2022/center'
 assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_training_data_parent_dir}"
 device = 'cuda'
-institution_split_csv_filename = 'FeTS2_stage1_2.csv'
+institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
+
+home = str(Path.home())
+trg_path = os.path.join(home, '.local/workspace', institution_split_csv_filename)
+assert os.path.exists(trg_path), f"{trg_path} not exists"
 validation_csv_filename = 'validation.csv'
 
 if sys.argv[1] == 'train':
@@ -23,17 +28,32 @@ if sys.argv[1] == 'train':
                                 collaborators_chosen_each_round,
                                 collaborator_times_per_round):
         logger.info("major_minor_collaborator_on_rounds called!")
-        if fl_round % 4 == 0:
-            training_collaborators = [
-                10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
-                29, 19, 31, 11, 17,
-                16, 30, 18, 23, 14,
-                12, 32, 20,  4, 33, 27, 13
-            ]
+        if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
+            if fl_round % 4 == 0:
+                training_collaborators = [
+                    10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
+                    29, 19, 31, 11, 17,
+                    16, 30, 18, 23, 14,
+                    12, 32, 20,  4, 33, 27, 13
+                ]
+            else:
+                training_collaborators = [
+                1,  2,  3, 24, 25, 26
+                ]
+        elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
+            if fl_round % 5 == 0:
+                training_collaborators = [
+                    2, 3, 4, 5, 6,  7, 8, 9, 10, 11,
+                    12,13,14,15,16, 17,19,20,21,22,
+                    23,
+                ]
+            else:
+                training_collaborators = [
+                    1, 18
+                ]
         else:
-            training_collaborators = [
-            1,  2,  3, 24, 25, 26
-            ]
+            raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
+
         return [str(el) for el in training_collaborators]
     
     # a very simple function. Everyone trains every round.
@@ -59,14 +79,27 @@ if sys.argv[1] == 'train':
                                   fl_round,
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
-        if fl_round % 4 == 0:
-            epochs_per_round = 1
-            learning_rate = 1e-3
-            return (learning_rate, epochs_per_round)
+
+        if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
+            if fl_round % 4 == 0:
+                epochs_per_round = 1
+                learning_rate = 1e-3
+                return (learning_rate, epochs_per_round)
+            else:
+                epochs_per_round = 0.3
+                learning_rate = 1e-3
+                return (learning_rate, epochs_per_round)
+        elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
+            if fl_round % 5 == 0:
+                epochs_per_round = 1
+                learning_rate = 1e-3
+                return (learning_rate, epochs_per_round)
+            else:
+                epochs_per_round = 0.2
+                learning_rate = 1e-3
+                return (learning_rate, epochs_per_round)
         else:
-            epochs_per_round = 0.3
-            learning_rate = 1e-3
-            return (learning_rate, epochs_per_round)
+            raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
     
     def constant_hyper_parameters(collaborators,
                                   db_iterator,
