@@ -1,87 +1,40 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # FeTS Challenge
-# 
-# Contributing Authors (alphabetical order):
-# - Brandon Edwards (Intel)
-# - Patrick Foley (Intel)
-# - Alexey Gruzdev (Intel)
-# - Sarthak Pati (University of Pennsylvania)
-# - Micah Sheller (Intel)
-# - Ilya Trushkin (Intel)
-
-
 import os
 import numpy as np
 import sys
 from fets_challenge import run_challenge_experiment
-
-
-# # Adding custom functionality to the experiment
-# Within this notebook there are **four** functional areas that you can adjust to improve upon the challenge reference code:
-# 
-# - [Custom aggregation logic](#Custom-Aggregation-Functions)
-# - [Selection of training hyperparameters by round](#Custom-hyperparameters-for-training)
-# - [Collaborator training selection by round](#Custom-Collaborator-Training-Selection)
-# 
-
-# ## Experiment logger for your functions
-# The following import allows you to use the same logger used by the experiment framework. This lets you include logging in your functions.
-
 from fets_challenge.experiment import logger
 
-
-# # Getting access to historical weights, metrics, and more
-# The **db_iterator** parameter gives full access to all of the tensors and metrics stored by the aggregator. Participants can access these records to create advanced aggregation methods, hyperparameters for training, and novel selection logic for which collaborators should participant in a given training round. See below for details about how data is stored internally and a comprehensive set of examples. 
-# 
-# ## Basic Form
-# Each record yielded by the `db_iterator` contains the following fields:
-# 
-# |                      TensorKey                     |   Tensor  |
-# |:--------------------------------------------------:|:---------:|
-# | 'tensor_name', 'origin', 'round', 'report', 'tags' | 'nparray' |
-# 
-# All records are internally stored as a numpy array: model weights, metrics, as well as hyperparameters. 
-# 
-# Detailed field explanation:
-# - **'tensor_name'** (str): The `'tensor_name'` field corresponds to the model layer name (i.e. `'conv2d'`), or the name of the metric that has been reported by a collaborator (i.e. `'accuracy'`). The built-in validation functions used for evaluation of the challenge will be given a prefix of `'challenge_metric_\*'`. The names that you provide in conjunction with a custom validation metrics to the ```run_challenge_experiment``` function will remain unchanged.  
-# - **'origin'** (str): The origin denotes where the numpy array came from. Possible values are any of the collaborator names (i.e. `'col1'`), or the aggregator.
-# - **'round'** (int): The round that produced the tensor. If your experiment has `N` rounds, possible values are `0->N-1`
-# - **'report'** (boolean): This field is one of the ways that a metric can be denoted; For the purpose of aggregation, this field can be ignored.
-# - **'tags'** (tuple(str)): The tags include unstructured information that can be used to create complex data flows. For example, model layer weights will have the same `'tensor_name'` and `'round'` before and after training, so a tag of `'trained'` is used to denote that the numpy array corresponds to the layer of a locally trained model. This field is also used to capture metric information. For example, `aggregated_model_validation` assigns tags of `'metric'` and `'validate_agg'` to reflect that the metric reported corresponds to the validation score of the latest aggregated model, whereas the tags of `'metric'` and `'validate_local'` are used for metrics produced through validation after training on a collaborator's local data.   
-# - **'nparray'** (numpy array) : This contains the value of the tensor. May contain the model weights, metrics, or hyperparameters as a numpy array.
-# 
-
-# ### Note about OpenFL "tensors"
-# In order to be ML framework agnostic, OpenFL represents tensors as numpy arrays. Throughout this code, tensor data is represented as numpy arrays (as opposed to torch tensors, for example).
-
-# # Custom Collaborator Training Selection
-# By default, all collaborators will be selected for training each round, but you can easily add your own logic to select a different set of collaborators based on custom criteria. An example is provided below for selecting a single collaborator on odd rounds that had the fastest training time (`one_collaborator_on_odd_rounds`).
-brats_training_data_parent_dir = '/home2/dwnusa/2024_data/FeTS2022/center'
+brats_training_data_parent_dir = f'/home2/{os.getlogin()}/2024_data/FeTS2022/center'
+assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_training_data_parent_dir}"
 device = 'cuda'
+institution_split_csv_filename = 'FeTS2_stage1_2.csv'
+validation_csv_filename = 'validation.csv'
+
 if sys.argv[1] == 'train':
-    
+    assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
+    rounds_to_train = int(sys.argv[2])
+
     def major_minor_collaborator_on_rounds(collaborators,
                                 db_iterator,
                                 fl_round,
                                 collaborators_chosen_each_round,
                                 collaborator_times_per_round):
         logger.info("major_minor_collaborator_on_rounds called!")
-        if fl_round < 3:
-            training_collaborators = [
-            1,  2,  3, 24, 25, 26
-            ]
-        else:
+        if fl_round % 4 == 0:
             training_collaborators = [
                 10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
                 29, 19, 31, 11, 17,
                 16, 30, 18, 23, 14,
                 12, 32, 20,  4, 33, 27, 13
             ]
+        else:
+            training_collaborators = [
+            1,  2,  3, 24, 25, 26
+            ]
         return [str(el) for el in training_collaborators]
-    
-    
     
     # a very simple function. Everyone trains every round.
     def all_collaborators_train(collaborators,
@@ -101,71 +54,18 @@ if sys.argv[1] == 'train':
         """
         return collaborators
     
-    # this is not a good algorithm, but we include it to demonstrate the following:
-        # simple use of the logger and of fl_round
-        # you can search through the "collaborator_times_per_round" dictionary to see how long collaborators have been taking
-        # you can have a subset of collaborators train in a given round
-    def one_collaborator_on_odd_rounds(collaborators,
-                                       db_iterator,
-                                       fl_round,
-                                       collaborators_chosen_each_round,
-                                       collaborator_times_per_round):
-        """Chooses which collaborators will train for a given round.
-        
-        Args:
-            collaborators: list of strings of collaborator names
-            db_iterator: iterator over history of all tensors.
-                Columns: ['tensor_name', 'round', 'tags', 'nparray']
-            fl_round: round number
-            collaborators_chosen_each_round: a dictionary of {round: list of collaborators}. Each list indicates which collaborators trained in that given round.
-            collaborator_times_per_round: a dictionary of {round: {collaborator: total_time_taken_in_round}}.  
-        """
-        logger.info("one_collaborator_on_odd_rounds called!")
-        # on odd rounds, choose the fastest from the previous round
-        if fl_round % 2 == 1:
-            training_collaborators = None
-            fastest_time = np.inf
-            
-            # the previous round information will be index [fl_round - 1]
-            # this information is itself a dictionary of {col: time}
-            for col, t in collaborator_times_per_round[fl_round - 1].items():
-                if t < fastest_time:
-                    fastest_time = t
-                    training_collaborators = [col]
-        else:
-            training_collaborators = collaborators
-        return training_collaborators
-    
-    
-    # # Custom hyperparameters for training
-    
-    # You can customize the hyper-parameters for the training collaborators at each round. At the start of the round, the experiment loop will invoke your function and set the hyper-parameters for that round based on what you return.
-    # 
-    # The training hyper-parameters for a round are:
-    # - **`learning_rate`**: the learning rate value set for the Adam optimizer
-    # - **`epochs_per_round`**: the number of epochs each training collaborator will train. Must be a float or None. Partial epochs are allowed, such as 0.5 epochs.
-    # 
-    # Your function will receive the typical aggregator state/history information that it can use to make its determination. The function must return a tuple of (`learning_rate`, `epochs_per_round`). For example, if you return:
-    # 
-    # `(1e-4, 2)`
-    # 
-    # then all collaborators selected based on the [collaborator training selection criteria](#Custom-Collaborator-Training-Selection) will train for `2` epochs with a learning rate of `1e-4`.
-    # 
-    # Different hyperparameters can be specified for collaborators for different rounds but they remain the same for all the collaborators that are chosen for that particular round. In simpler words, collaborators can not have different hyperparameters for the same round.
-    
-    # This simple example uses constant hyper-parameters through the experiment
     def major_minor_parameters(collaborators,
                                   db_iterator,
                                   fl_round,
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
-        if fl_round < 3:
-            epochs_per_round = 4
+        if fl_round % 4 == 0:
+            epochs_per_round = 1
             learning_rate = 1e-3
             return (learning_rate, epochs_per_round)
         else:
-            epochs_per_round = 1
-            learning_rate = 1e-4
+            epochs_per_round = 0.3
+            learning_rate = 1e-3
             return (learning_rate, epochs_per_round)
     
     def constant_hyper_parameters(collaborators,
@@ -223,101 +123,6 @@ if sys.argv[1] == 'train':
         epochs_per_round = max(1,int(epochs_per_round))
         
         return (learning_rate, epochs_per_round)
-    
-    
-    # # Custom Aggregation Functions
-    # Standard aggregation methods allow for simple layer-wise combination (via weighted_mean, mean, median, etc.); however, more complex aggregation methods can be supported by evaluating collaborator metrics, weights from prior rounds, etc. OpenFL enables custom aggregation functions via the [**AggregationFunctionInterface**](https://github.com/intel/openfl/blob/fets/openfl/component/aggregation_functions/interface.py). For the challenge, we wrap this interface so we can pass additional simulation state, such as simulated time.
-    # 
-    # [**LocalTensors**](https://github.com/intel/openfl/blob/fets/openfl/utilities/types.py#L13) are named tuples of the form `('collaborator_name', 'tensor', 'collaborator_weight')`. Your custom aggregation function will be passed a list of LocalTensors, which will contain an entry for each collaborator who participated in the prior training round. The [**`tensor_db`**](#Getting-access-to-historical-weights,-metrics,-and-more) gives direct access to the aggregator's tensor_db dataframe and includes all tensors / metrics reported by collaborators. Using the passed tensor_db reference, participants may even store custom information by using in-place write operations. A few examples are included below.
-    # 
-    # We also provide a number of convenience functions to be used in conjunction with the TensorDB for those who are less familiar with pandas. These are added directly to the dataframe object that gets passed to the aggregation function to make it easier to *store* , *retrieve*, and *search* through the database so that participants can focus on algorithms instead of infrastructure / framework details.
-    #
-    # tensor_db.store:
-    #
-    #        Convenience method to store a new tensor in the dataframe.
-    #        Args:
-    #            tensor_name [ optional ] : The name of the tensor (or metric) to be saved
-    #            origin      [ optional ] : Origin of the tensor
-    #            fl_round    [ optional ] : Round the tensor is associated with
-    #            metric:     [ optional ] : Is the tensor a metric?
-    #            tags:       [ optional ] : Tuple of unstructured tags associated with the tensor
-    #            np.array    [ required ] : Value to store associated with the other included information (i.e. TensorKey info)
-    #            overwrite:  [ optional ] : If the tensor is already present in the dataframe
-    #                                       should it be overwritten?
-    #        Returns:
-    #            None
-    #
-    #
-    # tensor_db.retrieve
-    # 
-    #        Convenience method to retrieve tensor from the dataframe.
-    #        Args:
-    #            tensor_name [ optional ] : The name of the tensor (or metric) to retrieve
-    #            origin      [ optional ] : Origin of the tensor
-    #            fl_round    [ optional ] : Round the tensor is associated with
-    #            metric:     [ optional ] : Is the tensor a metric?
-    #            tags:       [ optional ] : Tuple of unstructured tags associated with the tensor
-    #                                       should it be overwritten?
-    #        Returns:
-    #            Optional[ np.array ]     : If there is a match, return the first row
-    #
-    # tensor_db.search
-    #
-    #        Search the tensor_db dataframe based on:
-    #            - tensor_name
-    #            - origin
-    #            - fl_round
-    #            - metric
-    #            -tags
-    #        Returns a new dataframe that matched the query
-    #        Args:
-    #            tensor_name: The name of the tensor (or metric) to be searched
-    #            origin:      Origin of the tensor
-    #            fl_round:    Round the tensor is associated with
-    #            metric:      Is the tensor a metric?
-    #            tags:        Tuple of unstructured tags associated with the tensor
-    #        Returns:
-    #            pd.DataFrame : New dataframe that matches the search query from 
-    #                           the tensor_db dataframe
-    #
-    # ## Converting the tensor_db to a db_iterator (to reuse aggregation methods from last year's competition)
-    # ### Using prior layer weights
-    # Here is an example of how to extract layer weights from prior round. The tag is `'aggregated'` indicates this : 
-    #     
-    #     for _, record in tensor_db.iterrows():
-    #             if (
-    #                 record['round'] == (fl_round - 1)
-    #                 and record['tensor_name'] == tensor_name
-    #                 and 'aggregated' in record['tags']
-    #                 and 'delta' not in record['tags']
-    #                ):
-    #                 previous_tensor_value = record['nparray']
-    #                 break
-    # 
-    # ### Using validation metrics for filtering
-    # 
-    #     threshold = fl_round * 0.3 + 0.5
-    #     metric_name = 'acc'
-    #     tags = ('metric','validate_agg')
-    #     selected_tensors = []
-    #     selected_weights = []
-    #     for _, record in tensor_db.iterrows():
-    #         for local_tensor in local_tensors:
-    #             tags = set(tags + [local_tensor.col_name])
-    #             if (
-    #                 tags <= set(record['tags']) 
-    #                 and record['round'] == fl_round
-    #                 and record['tensor_name'] == metric_name
-    #                 and record['nparray'] >= threshold
-    #             ):
-    #                 selected_tensors.append(local_tensor.tensor)
-    #                 selected_weights.append(local_tensor.weight)
-    # 
-    # ### A Note about true OpenFL deployments
-    # The OpenFL custom aggregation interface does not currently provide timing information, so please note that any solutions that make use of simulated time will need to be adapted to be truly OpenFL compatible in a real federation by using actual `time.time()` calls (or similar) instead of the simulated time.
-    # 
-    # Solutions that use neither **`collaborators_chosen_each_round`** or **`collaborator_times_per_round`** will match the existing OpenFL aggregation customization interface, thus could be used in a real federated deployment using OpenFL.
-    
     
     # the simple example of weighted FedAVG
     def weighted_average_aggregation(local_tensors,
@@ -561,7 +366,7 @@ if sys.argv[1] == 'train':
     # other partitionings to test your changes for generalization to multiple partitionings.
     #institution_split_csv_filename = 'partitioning_1.csv'
     # institution_split_csv_filename = 'small_split.csv'
-    institution_split_csv_filename = 'FeTS2_stage1_2.csv'
+    # institution_split_csv_filename = 'FeTS2_stage1_2.csv'
     
     # change this to point to the parent directory of the data
     # brats_training_data_parent_dir = '/home2/dwnusa/2024_data/FeTS2022/center'
@@ -575,7 +380,7 @@ if sys.argv[1] == 'train':
     
     # you'll want to increase this most likely. You can set it as high as you like, 
     # however, the experiment will exit once the simulated time exceeds one week. 
-    rounds_to_train = 20
+    # rounds_to_train = 20
     
     # (bool) Determines whether checkpoints should be saved during the experiment. 
     # The checkpoints can grow quite large (5-10GB) so only the latest will be saved when this parameter is enabled
@@ -607,6 +412,8 @@ if sys.argv[1] == 'train':
     scores_dataframe
 
 elif sys.argv[1] == 'infer':
+    print(type(sys.argv[2]), sys.argv[2]=='str')
+    assert isinstance(sys.argv[2], str), f"argv[2] required for checkpoint_folder"
     # ## Produce NIfTI files for best model outputs on the validation set
     # Now we will produce model outputs to submit to the leader board.
     # 
@@ -625,11 +432,12 @@ elif sys.argv[1] == 'infer':
     # you will need to specify the correct experiment folder and the parent directory for
     # the data you want to run inference over (assumed to be the experiment that just completed)
     
-    checkpoint_folder='experiment_'
+    checkpoint_folder=f'{sys.argv[2]}'# 'experiment_'
+    assert os.path.isdir(checkpoint_folder), f"{sys.argv[2]} not exist"
     os.makedirs(os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder), exist_ok=True)
     #data_path = </PATH/TO/CHALLENGE_VALIDATION_DATA>
     data_path = brats_training_data_parent_dir
-    validation_csv_filename = 'validation.csv'
+    # validation_csv_filename = 'validation.csv'
     
     # you can keep these the same if you wish
     final_model_path = os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder, 'best_model.pkl')
@@ -651,4 +459,4 @@ elif sys.argv[1] == 'infer':
                           outputtag='',
                           device=device)
 else:
-    print(f"{sys.argv[1]} is unknown")
+    print(f"{sys.argv[1]} is unknown on {os.getlogin()}")
