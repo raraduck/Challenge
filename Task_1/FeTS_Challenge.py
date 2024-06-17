@@ -38,7 +38,7 @@ if sys.argv[1] == 'train':
                                 collaborators_chosen_each_round,
                                 collaborator_times_per_round):
         logger.info("major_minor_collaborator_on_rounds called!")
-        if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
+        if 'FeTS2' in institution_split_csv_filename:
             if fl_round % 4 == 0:
                 training_collaborators = [
                     10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
@@ -66,7 +66,7 @@ if sys.argv[1] == 'train':
                 training_collaborators = [
                     10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
                 ]
-        elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
+        elif 'FeTS1' in institution_split_csv_filename:
             if fl_round % 5 in [0, 2, 4] :
                 training_collaborators = [
                     2, 3, 4, 5, 6,  7, 8, 9, 10, 11,
