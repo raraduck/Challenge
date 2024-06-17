@@ -17,7 +17,7 @@ from fets_challenge.experiment import logger
 # # os.makedirs(chdir, exist_ok=True)
 # assert os.path.exists(trgdir), f"chdir not exist"
 # os.chdir(trgdir)
-workspae = 'workspace'
+workspace = 'workspace'
 brats_training_data_parent_dir = f'/home2/{os.getlogin()}/2024_data/FeTS2022/center'
 assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_training_data_parent_dir}"
 device = 'cuda'
