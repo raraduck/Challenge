@@ -8,13 +8,20 @@ from pathlib import Path
 from fets_challenge import run_challenge_experiment
 from fets_challenge.experiment import logger
 
+home = str(Path.home())
+workspace = 'workspace2'
+chdir = os.path.join(home, '.local', workspace)
+# os.makedirs(chdir, exist_ok=True)
+assert os.path.exists(chdir), f"chdir not exist"
+os.chdir(chdir)
+
 brats_training_data_parent_dir = f'/home2/{os.getlogin()}/2024_data/FeTS2022/center'
 assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_training_data_parent_dir}"
 device = 'cuda'
 institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
 
 home = str(Path.home())
-trg_path = os.path.join(home, '.local/workspace', institution_split_csv_filename)
+trg_path = os.path.join(home, f'.local/{workspace}', institution_split_csv_filename)
 assert os.path.exists(trg_path), f"{trg_path} not exists"
 validation_csv_filename = 'validation.csv'
 
@@ -498,19 +505,19 @@ elif sys.argv[1] == 'infer':
     
     checkpoint_folder=f'{sys.argv[2]}'# 'experiment_'
     assert os.path.isdir(checkpoint_folder), f"{sys.argv[2]} not exist"
-    os.makedirs(os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder), exist_ok=True)
+    os.makedirs(os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder), exist_ok=True)
     #data_path = </PATH/TO/CHALLENGE_VALIDATION_DATA>
     data_path = brats_training_data_parent_dir
     # validation_csv_filename = 'validation.csv'
     
     # you can keep these the same if you wish
-    final_model_path = os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder, 'best_model.pkl')
+    final_model_path = os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder, 'best_model.pkl')
     
     # If the experiment is only run for a single round, use the temp model instead
     if not Path(final_model_path).exists():
-       final_model_path = os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder, 'temp_model.pkl')
+       final_model_path = os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder, 'temp_model.pkl')
     
-    outputs_path = os.path.join(home, '.local/workspace/checkpoint', checkpoint_folder, 'model_outputs')
+    outputs_path = os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder, 'model_outputs')
     
     
     # Using this best model, we can now produce NIfTI files for model outputs 
