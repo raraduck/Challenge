@@ -36,20 +36,48 @@ if sys.argv[1] == 'train':
                     16, 30, 18, 23, 14,
                     12, 32, 20,  4, 33, 27, 13
                 ]
+            elif fl_round % 4 == 1:
+                training_collaborators = [
+                1,  26
+                ]
+            elif fl_round % 4 == 2:
+                training_collaborators = [
+                2,  25
+                ]
+            elif fl_round % 4 == 3:
+                training_collaborators = [
+                3,  24
+                ]
+            #elif fl_round % 4 == 3:
+                #training_collaborators = [
+                #1,  2,  3, 24, 25, 26
+                #]
             else:
                 training_collaborators = [
-                1,  2,  3, 24, 25, 26
+                    10, 28, 22,  9,  6,  8,  7,  5, 15, 21,
                 ]
         elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
-            if fl_round % 5 == 0:
+            if fl_round % 5 in [0, 2, 4] :
                 training_collaborators = [
                     2, 3, 4, 5, 6,  7, 8, 9, 10, 11,
                     12,13,14,15,16, 17,19,20,21,22,
                     23,
                 ]
+            elif fl_round % 5 == 1:
+                training_collaborators = [
+                3
+                ]
+            elif fl_round % 5 == 3:
+                training_collaborators = [
+                24
+                ]
+            #else:
+                #training_collaborators = [
+                    #1, 18
+                #]
             else:
                 training_collaborators = [
-                    1, 18
+                    23,
                 ]
         else:
             raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
@@ -80,26 +108,29 @@ if sys.argv[1] == 'train':
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
 
-        if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
-            if fl_round % 4 == 0:
-                epochs_per_round = 1
-                learning_rate = 1e-3
-                return (learning_rate, epochs_per_round)
-            else:
-                epochs_per_round = 0.3
-                learning_rate = 1e-3
-                return (learning_rate, epochs_per_round)
-        elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
-            if fl_round % 5 == 0:
-                epochs_per_round = 1
-                learning_rate = 1e-3
-                return (learning_rate, epochs_per_round)
-            else:
-                epochs_per_round = 0.2
-                learning_rate = 1e-3
-                return (learning_rate, epochs_per_round)
-        else:
-            raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
+        epochs_per_round = 3 if fl_round == 0 else 1
+        learning_rate = 1e-3 if fl_round == 0 else 1e-4
+        return (learning_rate, epochs_per_round)
+        #if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
+            #if fl_round % 4 == 0:
+                #epochs_per_round = 1
+                #learning_rate = 1e-3
+                #return (learning_rate, epochs_per_round)
+            #else:
+                #epochs_per_round = 0.3
+                #learning_rate = 1e-3
+                #return (learning_rate, epochs_per_round)
+        #elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
+            #if fl_round % 5 == 0:
+                #epochs_per_round = 1
+                #learning_rate = 1e-3
+                #return (learning_rate, epochs_per_round)
+            #else:
+                #epochs_per_round = 0.2
+                #learning_rate = 1e-3
+                #return (learning_rate, epochs_per_round)
+        #else:
+            #raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
     
     def constant_hyper_parameters(collaborators,
                                   db_iterator,
