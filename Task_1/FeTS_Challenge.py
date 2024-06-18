@@ -152,8 +152,15 @@ if sys.argv[1] == 'train':
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
 
-        epochs_per_round = 2 if fl_round == 0 else 1
-        learning_rate = 1e-3 if fl_round == 0 else 1e-4
+        #epochs_per_round = 10.0
+        #decay = min(fl_round, 10)
+        #decay = 0.9 ** decay
+        #epochs_per_round *= decay    
+        #epochs_per_round = max(1,int(epochs_per_round))
+
+        epochs_per_round = 10 if fl_round < 10 else 1
+        learning_rate = 1e-3 if fl_round < 10  else 1e-4
+        
         return (learning_rate, epochs_per_round)
         #if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
             #if fl_round % 4 == 0:
@@ -521,7 +528,7 @@ if sys.argv[1] == 'train':
     
     
     # change any of these you wish to your custom functions. You may leave defaults if you wish.
-    aggregation_function = weighted_average_aggregation# FedAvgM_Selection  # weighted_average_aggregation
+    aggregation_function = fets2022_1_aggregation # weighted_average_aggregation# FedAvgM_Selection  # weighted_average_aggregation
     choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
     training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
     
