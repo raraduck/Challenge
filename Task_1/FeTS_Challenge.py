@@ -552,7 +552,7 @@ if sys.argv[1] == 'train':
     
     # increase this if you need a longer history for your algorithms
     # decrease this if you need to reduce system RAM consumption
-    db_store_rounds = 0
+    db_store_rounds = 1
     
     # this is passed to PyTorch, so set it accordingly for your system
     # device = 'cuda'
