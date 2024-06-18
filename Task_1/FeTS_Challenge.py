@@ -254,6 +254,68 @@ if sys.argv[1] == 'train':
         
         # so we can just use numpy.average
         return np.average(tensor_values, weights=weight_values, axis=0)
+
+    
+    def fets2022_1_aggregation(local_tensors,
+                                 tensor_db,
+                                 tensor_name,
+                                 fl_round,
+                                 collaborators_chosen_each_round,
+                                 collaborator_times_per_round):
+        if fl_round > 0:
+            # 검색 조건 설정
+            search_tags = [(el, 'metric') for el in collaborators_chosen_each_round[fl_round]]
+            # search_tags = [('1', 'metric'), ('2', 'metric'), ('3', 'metric')]
+    
+            col_names = [t.col_name for t in local_tensors]
+            # 조건에 맞는 데이터 필터링
+            prev_df = tensor_db[
+                (tensor_db['tensor_name'] == 'loss') &
+                (tensor_db['round'] == (fl_round-1)) &
+                (tensor_db['tags'].apply(lambda x: x in search_tags)) &
+                (tensor_db['origin'] == 'aggregator')
+            ]
+            prev_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in prev_df.iterrows()}
+            curr_df = tensor_db[
+                (tensor_db['tensor_name'] == 'loss') &
+                (tensor_db['round'] == (fl_round)) &
+                (tensor_db['tags'].apply(lambda x: x in search_tags)) &
+                (tensor_db['origin'] == 'aggregator')
+            ]
+            curr_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in curr_df.iterrows()}
+    
+            past5_rounds = range(max(0, fl_round - 4), fl_round + 1)  # fl_round에서 4 라운드 이전까지
+            integral_loss_df = tensor_db[
+                (tensor_db['tensor_name'] == 'loss') &
+                (tensor_db['round'].isin(past5_rounds)) &
+                (tensor_db['tags'].apply(lambda x: x in search_tags)) &
+                (tensor_db['origin'] == 'aggregator')
+            ]
+    
+            integral_loss_dict = {k:0 for k in col_names}
+            for idx, row in integral_loss_df.iterrows():
+                k = row['tags'][0]
+                integral_loss_dict[k] += float(row['nparray'])
+            integ = [integral_loss_dict[col_name] for col_name in col_names]
+            total_integ = sum(integ)
+            integ = [el / total_integ for el in integ]
+    
+            weight = [t.weight for t in local_tensors]
+    
+            prev_cost = [prev_loss_dict[col_name] for col_name in col_names]
+            curr_cost = [curr_loss_dict[col_name] for col_name in col_names]
+            deriv = [abs(prv - cur) for (prv, cur) in zip(prev_cost, curr_cost)]
+            total_deriv = sum(deriv)
+            deriv = [el/total_deriv for el in deriv]
+            PID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
+    
+            tensor_values = [t.tensor for t in local_tensors]
+            return np.average(tensor_values, weights=PID, axis=0)
+        else:
+            weight = [t.weight for t in local_tensors]
+            tensor_values = [t.tensor for t in local_tensors]
+            return np.average(tensor_values, weights=weight, axis=0)
+
     
     # here we will clip outliers by clipping deltas to the Nth percentile (e.g. 80th percentile)
     def clipped_aggregation(local_tensors,
