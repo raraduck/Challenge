@@ -21,14 +21,14 @@ workspace = 'workspace'
 brats_training_data_parent_dir = f'/home2/{os.getlogin()}/2024_data/FeTS2022/center'
 assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_training_data_parent_dir}"
 device = 'cuda'
-institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
-
-home = str(Path.home())
-trg_path = os.path.join(home, f'.local/{workspace}', institution_split_csv_filename)
-assert os.path.exists(trg_path), f"{trg_path} not exists"
 validation_csv_filename = 'validation.csv'
 
 if sys.argv[1] == 'train':
+    institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
+    home = str(Path.home())
+    trg_path = os.path.join(home, f'.local/{workspace}', institution_split_csv_filename)
+    assert os.path.exists(trg_path), f"{trg_path} not exists"
+
     assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
     rounds_to_train = int(sys.argv[2])
 
@@ -95,7 +95,7 @@ if sys.argv[1] == 'train':
             training_collaborators = [
                 subset1, subset18, *others
             ]
-        elif institution_split_csv_filename in ['FeTS2_idea2.csv']:
+        elif institution_split_csv_filename in ['FeTS2_idea1.csv']:
             inst1 =  [100, 101, 102, 103, 104]
             inst2 =  [200, 201, 202, 203, 204]
             inst3 =  [300, 301, 302, 303, 304]
@@ -453,7 +453,7 @@ if sys.argv[1] == 'train':
     
     
     # change any of these you wish to your custom functions. You may leave defaults if you wish.
-    aggregation_function = FedAvgM_Selection # weighted_average_aggregation
+    aggregation_function = weighted_average_aggregation# FedAvgM_Selection  # weighted_average_aggregation
     choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
     training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
     
@@ -475,7 +475,7 @@ if sys.argv[1] == 'train':
     
     # increase this if you need a longer history for your algorithms
     # decrease this if you need to reduce system RAM consumption
-    db_store_rounds = 5
+    db_store_rounds = 1
     
     # this is passed to PyTorch, so set it accordingly for your system
     # device = 'cuda'
@@ -486,7 +486,7 @@ if sys.argv[1] == 'train':
     
     # (bool) Determines whether checkpoints should be saved during the experiment. 
     # The checkpoints can grow quite large (5-10GB) so only the latest will be saved when this parameter is enabled
-    save_checkpoints = False
+    save_checkpoints = True
     
     # path to previous checkpoint folder for experiment that was stopped before completion. 
     # Checkpoints are stored in ~/.local/workspace/checkpoint, and you should provide the experiment directory 
@@ -535,8 +535,8 @@ elif sys.argv[1] == 'infer':
     # the data you want to run inference over (assumed to be the experiment that just completed)
     
     checkpoint_folder=f'{sys.argv[2]}'# 'experiment_'
-    assert os.path.isdir(checkpoint_folder), f"{sys.argv[2]} not exist"
     os.makedirs(os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder), exist_ok=True)
+    assert os.path.isdir(os.path.join(home, f'.local/{workspace}/checkpoint', checkpoint_folder)), f"{sys.argv[2]} not exist"
     #data_path = </PATH/TO/CHALLENGE_VALIDATION_DATA>
     data_path = brats_training_data_parent_dir
     # validation_csv_filename = 'validation.csv'
