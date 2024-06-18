@@ -158,8 +158,8 @@ if sys.argv[1] == 'train':
         #epochs_per_round *= decay    
         #epochs_per_round = max(1,int(epochs_per_round))
 
-        epochs_per_round = 10 if fl_round < 5 else 1
-        learning_rate = 1e-3 if fl_round < 5  else 1e-4
+        epochs_per_round = 5 if fl_round < 10 else 1
+        learning_rate = 1e-3 if fl_round < 10  else 1e-4
         
         return (learning_rate, epochs_per_round)
         #if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
@@ -291,7 +291,7 @@ if sys.argv[1] == 'train':
             ]
             pre_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in pre_df.iterrows()}
             post_df = tensor_db[
-                (tensor_db['tensor_name'] == 'loss') &
+                (tensor_db['tensor_name'] == 'valid_loss') &
                 (tensor_db['round'] == (fl_round)) &
                 (tensor_db['tags'].apply(lambda x: x in post_tags)) &
                 (tensor_db['origin'] == 'aggregator')
