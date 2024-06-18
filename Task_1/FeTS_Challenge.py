@@ -90,10 +90,13 @@ if sys.argv[1] == 'train':
                 12,13,14,15,16, 17,19,20,21,22,
                 23
             ]
+            indices = np.arange(len(others))
+            np.random.shuffle(indices)
+            shuffled_others = [others[i] for i in indices]
             subset1= inst1[np.random.randint(len(inst1))]
             subset18 = inst18[np.random.randint(len(inst18))] 
             training_collaborators = [
-                subset1, subset18, *others
+                subset1, subset18, *shuffled_others[:8]
             ]
         elif institution_split_csv_filename in ['FeTS2_idea1.csv']:
             inst1 =  [100, 101, 102, 103, 104]
@@ -108,6 +111,9 @@ if sys.argv[1] == 'train':
                 16, 30, 18, 23, 14,
                 12, 32, 20,  4, 33, 27, 13
             ]
+            indices = np.arange(len(others))
+            np.random.shuffle(indices)
+            shuffled_others = [others[i] for i in indices]
             subset1  = inst1[np.random.randint(len(inst1))]
             subset2  = inst2[np.random.randint(len(inst2))]
             subset3  = inst3[np.random.randint(len(inst3))]
@@ -115,7 +121,7 @@ if sys.argv[1] == 'train':
             subset25 = inst25[np.random.randint(len(inst25))] 
             subset26 = inst26[np.random.randint(len(inst26))] 
             training_collaborators = [
-                subset1, subset2, subset3, subset24, subset25, subset26, *others
+                subset1, subset2, subset3, subset24, subset25, subset26, *shuffled_others[:4]
             ]
         else:
             raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
