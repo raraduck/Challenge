@@ -291,7 +291,7 @@ if sys.argv[1] == 'train':
             ]
             pre_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in pre_df.iterrows()}
             post_df = tensor_db[
-                (tensor_db['tensor_name'] == 'loss') &
+                (tensor_db['tensor_name'] == 'valid_loss') &
                 (tensor_db['round'] == (fl_round)) &
                 (tensor_db['tags'].apply(lambda x: x in post_tags)) &
                 (tensor_db['origin'] == 'aggregator')
