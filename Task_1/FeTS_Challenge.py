@@ -453,7 +453,7 @@ if sys.argv[1] == 'train':
     
     
     # change any of these you wish to your custom functions. You may leave defaults if you wish.
-    aggregation_function = FedAvgM_Selection  # weighted_average_aggregation
+    aggregation_function = weighted_average_aggregation  # weighted_average_aggregation, FedAvgM_Selection
     choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
     training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
     
@@ -475,7 +475,7 @@ if sys.argv[1] == 'train':
     
     # increase this if you need a longer history for your algorithms
     # decrease this if you need to reduce system RAM consumption
-    db_store_rounds = 5
+    db_store_rounds = 1
     
     # this is passed to PyTorch, so set it accordingly for your system
     # device = 'cuda'
@@ -486,7 +486,7 @@ if sys.argv[1] == 'train':
     
     # (bool) Determines whether checkpoints should be saved during the experiment. 
     # The checkpoints can grow quite large (5-10GB) so only the latest will be saved when this parameter is enabled
-    save_checkpoints = False
+    save_checkpoints = True
     
     # path to previous checkpoint folder for experiment that was stopped before completion. 
     # Checkpoints are stored in ~/.local/workspace/checkpoint, and you should provide the experiment directory 
