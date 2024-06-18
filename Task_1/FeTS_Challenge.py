@@ -158,7 +158,7 @@ if sys.argv[1] == 'train':
         #epochs_per_round *= decay    
         #epochs_per_round = max(1,int(epochs_per_round))
 
-        epochs_per_round = 10 if fl_round < 10 else 1
+        epochs_per_round = 3 if fl_round < 10 else 1
         learning_rate = 1e-3 if fl_round < 10  else 1e-4
         
         return (learning_rate, epochs_per_round)
