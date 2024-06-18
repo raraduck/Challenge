@@ -277,31 +277,33 @@ if sys.argv[1] == 'train':
                                  collaborator_times_per_round):
         if fl_round > 0:
             # 검색 조건 설정
-            search_tags = [(el, 'metric') for el in collaborators_chosen_each_round[fl_round]]
+            pre_tags = [(el, 'metric', 'validate_agg') for el in collaborators_chosen_each_round[fl_round]]
+            post_tags = [(el, 'metric', 'validate_local') for el in collaborators_chosen_each_round[fl_round]]
             # search_tags = [('1', 'metric'), ('2', 'metric'), ('3', 'metric')]
     
             col_names = [t.col_name for t in local_tensors]
             # 조건에 맞는 데이터 필터링
-            prev_df = tensor_db[
-                (tensor_db['tensor_name'] == 'loss') &
-                (tensor_db['round'] == (fl_round-1)) &
-                (tensor_db['tags'].apply(lambda x: x in search_tags)) &
+            pre_df = tensor_db[
+                (tensor_db['tensor_name'] == 'valid_loss') &
+                (tensor_db['round'] == (fl_round)) &
+                (tensor_db['tags'].apply(lambda x: x in pre_tags)) &
                 (tensor_db['origin'] == 'aggregator')
             ]
-            prev_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in prev_df.iterrows()}
-            curr_df = tensor_db[
+            pre_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in pre_df.iterrows()}
+            post_df = tensor_db[
                 (tensor_db['tensor_name'] == 'loss') &
                 (tensor_db['round'] == (fl_round)) &
-                (tensor_db['tags'].apply(lambda x: x in search_tags)) &
+                (tensor_db['tags'].apply(lambda x: x in post_tags)) &
                 (tensor_db['origin'] == 'aggregator')
             ]
-            curr_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in curr_df.iterrows()}
+            post_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in post_df.iterrows()}
     
             past5_rounds = range(max(0, fl_round - 4), fl_round + 1)  # fl_round에서 4 라운드 이전까지
+            # ***** el 이 이전 값에서 발견되어야함
             integral_loss_df = tensor_db[
-                (tensor_db['tensor_name'] == 'loss') &
+                (tensor_db['tensor_name'] == 'valid_loss') &
                 (tensor_db['round'].isin(past5_rounds)) &
-                (tensor_db['tags'].apply(lambda x: x in search_tags)) &
+                (tensor_db['tags'].apply(lambda x: x in post_tags)) &
                 (tensor_db['origin'] == 'aggregator')
             ]
     
@@ -315,9 +317,9 @@ if sys.argv[1] == 'train':
     
             weight = [t.weight for t in local_tensors]
     
-            prev_cost = [prev_loss_dict[col_name] for col_name in col_names]
-            curr_cost = [curr_loss_dict[col_name] for col_name in col_names]
-            deriv = [abs(prv - cur) for (prv, cur) in zip(prev_cost, curr_cost)]
+            pre_cost = [pre_loss_dict[col_name] for col_name in col_names]
+            post_cost = [post_loss_dict[col_name] for col_name in col_names]
+            deriv = [abs(pre - post) for (pre, post) in zip(pre_cost, post_cost)]
             total_deriv = sum(deriv)
             deriv = [el/total_deriv for el in deriv]
             PID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
