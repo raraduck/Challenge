@@ -32,6 +32,10 @@ if sys.argv[1] == 'train':
     assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
     rounds_to_train = int(sys.argv[2])
 
+    db_store_rounds = 1
+    save_checkpoints = True
+    restore_from_checkpoint_folder = None
+
     def major_minor_collaborator_on_rounds(collaborators,
                                 db_iterator,
                                 fl_round,
@@ -151,37 +155,16 @@ if sys.argv[1] == 'train':
                                   fl_round,
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
-
-        #epochs_per_round = 10.0
-        #decay = min(fl_round, 10)
-        #decay = 0.9 ** decay
-        #epochs_per_round *= decay    
-        #epochs_per_round = max(1,int(epochs_per_round))
-
-        epochs_per_round = 10 if fl_round < 5 else 1
-        learning_rate = 1e-3 if fl_round < 5  else 1e-4
+        
+        major_epochs = int(sys.argv[4])
+        minor_epochs = 1
+        milestone = int(sys.argv[5])
+                                      
+        epochs_per_round = major_epochs if fl_round < milestone else minor_epochs
+        learning_rate = 1e-3 if fl_round < milestone  else 1e-4
         
         return (learning_rate, epochs_per_round)
-        #if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
-            #if fl_round % 4 == 0:
-                #epochs_per_round = 1
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-            #else:
-                #epochs_per_round = 0.3
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-        #elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
-            #if fl_round % 5 == 0:
-                #epochs_per_round = 1
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-            #else:
-                #epochs_per_round = 0.2
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-        #else:
-            #raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
+
     
     def constant_hyper_parameters(collaborators,
                                   db_iterator,
@@ -206,38 +189,7 @@ if sys.argv[1] == 'train':
         epochs_per_round = 1
         learning_rate = 1e-3
         return (learning_rate, epochs_per_round)
-    
-    
-    # this example trains less at each round
-    def train_less_each_round(collaborators,
-                              db_iterator,
-                              fl_round,
-                              collaborators_chosen_each_round,
-                              collaborator_times_per_round):
-        """Set the training hyper-parameters for the round.
-        
-        Args:
-            collaborators: list of strings of collaborator names
-            db_iterator: iterator over history of all tensors.
-                Columns: ['tensor_name', 'round', 'tags', 'nparray']
-            fl_round: round number
-            collaborators_chosen_each_round: a dictionary of {round: list of collaborators}. Each list indicates which collaborators trained in that given round.
-            collaborator_times_per_round: a dictionary of {round: {collaborator: total_time_taken_in_round}}.  
-        Returns:
-            tuple of (learning_rate, epochs_per_round) 
-        """
-    
-        # we'll have a constant learning_rate
-        learning_rate = 1e-3
-        
-        # our epochs per round will start at 1.0 and decay by 0.9 for the first 10 rounds
-        epochs_per_round = 1.0
-        decay = min(fl_round, 10)
-        decay = 0.9 ** decay
-        epochs_per_round *= decay    
-        epochs_per_round = max(1,int(epochs_per_round))
-        
-        return (learning_rate, epochs_per_round)
+                                      
     
     # the simple example of weighted FedAVG
     def weighted_average_aggregation(local_tensors,
@@ -331,67 +283,6 @@ if sys.argv[1] == 'train':
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=weight, axis=0)
 
-    
-    # here we will clip outliers by clipping deltas to the Nth percentile (e.g. 80th percentile)
-    def clipped_aggregation(local_tensors,
-                            tensor_db,
-                            tensor_name,
-                            fl_round,
-                            collaborators_chosen_each_round,
-                            collaborator_times_per_round):
-        """Aggregate tensors. This aggregator clips all tensor values to the 80th percentile of the absolute values to prevent extreme changes.
-    
-        Args:
-            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            tensor_db: pd.DataFrame that contains global tensors / metrics.
-                Columns: ['tensor_name', 'origin', 'round', 'report',  'tags', 'nparray']
-            tensor_name: name of the tensor
-            fl_round: round number
-            collaborators_chosen_each_round: a dictionary of {round: list of collaborators}. Each list indicates which collaborators trained in that given round.
-            collaborator_times_per_round: a dictionary of {round: {collaborator: total_time_taken_in_round}}.
-        """
-        # the percentile we will clip to
-        clip_to_percentile = 80
-        
-        # first, we need to determine how much each local update has changed the tensor from the previous value
-        # we'll use the tensor_db search function to find the 
-        previous_tensor_value = tensor_db.search(tensor_name=tensor_name, fl_round=fl_round, tags=('model',), origin='aggregator')
-    
-        if previous_tensor_value.shape[0] > 1:
-            print(previous_tensor_value)
-            raise ValueError(f'found multiple matching tensors for {tensor_name}, tags=(model,), origin=aggregator')
-    
-        if previous_tensor_value.shape[0] < 1:
-            # no previous tensor, so just return the weighted average
-            return weighted_average_aggregation(local_tensors,
-                                                tensor_db,
-                                                tensor_name,
-                                                fl_round,
-                                                collaborators_chosen_each_round,
-                                                collaborator_times_per_round)
-    
-        previous_tensor_value = previous_tensor_value.nparray.iloc[0]
-    
-        # compute the deltas for each collaborator
-        deltas = [t.tensor - previous_tensor_value for t in local_tensors]
-    
-        # get the target percentile using the absolute values of the deltas
-        clip_value = np.percentile(np.abs(deltas), clip_to_percentile)
-            
-        # let's log what we're clipping to
-        logger.info("Clipping tensor {} to value {}".format(tensor_name, clip_value))
-        
-        # now we can compute our clipped tensors
-        clipped_tensors = []
-        for delta, t in zip(deltas, local_tensors):
-            new_tensor = previous_tensor_value + np.clip(delta, -1 * clip_value, clip_value)
-            clipped_tensors.append(new_tensor)
-            
-        # get an array of weight values for the weighted average
-        weights = [t.weight for t in local_tensors]
-    
-        # return the weighted average of the clipped tensors
-        return np.average(clipped_tensors, weights=weights, axis=0)
     
     # Adapted from FeTS Challenge 2021
     # Federated Brain Tumor Segmentation:Multi-Institutional Privacy-Preserving Collaborative Learning
@@ -552,7 +443,6 @@ if sys.argv[1] == 'train':
     
     # increase this if you need a longer history for your algorithms
     # decrease this if you need to reduce system RAM consumption
-    db_store_rounds = 1
     
     # this is passed to PyTorch, so set it accordingly for your system
     # device = 'cuda'
@@ -563,14 +453,12 @@ if sys.argv[1] == 'train':
     
     # (bool) Determines whether checkpoints should be saved during the experiment. 
     # The checkpoints can grow quite large (5-10GB) so only the latest will be saved when this parameter is enabled
-    save_checkpoints = True
     
     # path to previous checkpoint folder for experiment that was stopped before completion. 
     # Checkpoints are stored in ~/.local/workspace/checkpoint, and you should provide the experiment directory 
     # relative to this path (i.e. 'experiment_1'). Please note that if you restore from a checkpoint, 
     # and save checkpoint is set to True, then the checkpoint you restore from will be subsequently overwritten.
     # restore_from_checkpoint_folder = 'experiment_1'
-    restore_from_checkpoint_folder = None
     
     
     # the scores are returned in a Pandas dataframe
