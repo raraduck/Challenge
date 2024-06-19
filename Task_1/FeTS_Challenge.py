@@ -132,6 +132,40 @@ if sys.argv[1] == 'train':
 
         return [str(el) for el in training_collaborators]
     
+    def subset_selection_from_major_minor_collaborators_on_rounds(collaborators,
+                                       db_iterator,
+                                       fl_round,
+                                       collaborators_chosen_each_round,
+                                       collaborator_times_per_round):
+        csv_file = 'updated_partitioning_1.csv' # ? sys.argv[?]
+        n_nodes = 10 # sys.argv[?]
+    
+        node_ids = np.unique(np.array([int(el)//100 for el in collaborators])).tolist()
+        major_group = [1, 18] if len(node_ids) == 23 else [1, 2, 3, 24, 25, 26]
+        minor_group = [el for el in node_ids if el not in major_group]
+        major_np = np.array(major_group)
+        minor_np = np.array(minor_group)
+        np.random.shuffle(major_np)
+        np.random.shuffle(minor_np)
+        major_list = major_np.tolist()
+        minor_list = minor_np.tolist()
+        n_major = len(major_list) if n_nodes >= len(major_list) else n_nodes
+        n_minor = max(0, n_nodes-len(major_list))
+        nodes_selected = [
+            *major_list[:n_major],
+            *minor_list[:n_minor]
+        ]
+    
+        subset_list = collaborators
+        subset_np = np.array(subset_list)/100
+        subsets_selected = []
+        for node_id in nodes_selected:
+            subsets = subset_np[subset_np.astype('int') == node_id] * 100
+            np.random.shuffle(subsets)
+            subsets_selected = [*subsets_selected, int(subsets[0])]
+    
+        return [str(el) for el in subsets_selected]
+                                       
     # a very simple function. Everyone trains every round.
     def all_collaborators_train(collaborators,
                                 db_iterator,
