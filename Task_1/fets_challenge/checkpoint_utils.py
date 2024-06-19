@@ -15,8 +15,8 @@ def setup_checkpoint_folder():
       checkpoint_num = 1
     else:
       # Increment the existing checkpoint by 1
-      checkpoint_num = sorted([int(x.replace('checkpoint/experiment_','')) for x in existing_checkpoints])[-1] + 1
-    experiment_folder = f'experiment_{checkpoint_num}'
+      checkpoint_num = sorted([int(x.replace(f'checkpoint/experiment_{os.getlogin()}_','')) for x in existing_checkpoints])[-1] + 1
+    experiment_folder = f'experiment_{os.getlogin()}_{checkpoint_num}'
     checkpoint_folder = f'checkpoint/{experiment_folder}'
     Path(checkpoint_folder).mkdir(parents=True, exist_ok=False)
     return experiment_folder
