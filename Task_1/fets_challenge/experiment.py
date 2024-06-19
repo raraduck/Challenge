@@ -245,7 +245,7 @@ def run_challenge_experiment(aggregation_function,
     path.insert(0, str(work))
     
     # create gandlf_csv and get collaborator names
-    gandlf_csv_path = os.path.join(work, 'gandlf_paths.csv')
+    gandlf_csv_path = os.path.join(work, 'gandlf_paths_{os.getlogin()}.csv')
     # split_csv_path = os.path.join(work, institution_split_csv_filename)
     collaborator_names = construct_fedsim_csv(brats_training_data_parent_dir,
                                               institution_split_csv_filename,
@@ -278,12 +278,12 @@ def run_challenge_experiment(aggregation_function,
     # get the data loaders for each collaborator
     collaborator_data_loaders = {col: copy(plan).get_data_loader(col) for col in collaborator_names}
 
-    transformed_csv_dict = extract_csv_partitions(os.path.join(work, 'gandlf_paths.csv'))
+    transformed_csv_dict = extract_csv_partitions(os.path.join(work, f'gandlf_paths_{os.getlogin()}.csv'))
     # get the task runner, passing the first data loader
     for col in collaborator_data_loaders:
         #Insert logic to serialize train / val CSVs here
-        transformed_csv_dict[col]['train'].to_csv(os.path.join(work, 'seg_test_train.csv'))
-        transformed_csv_dict[col]['val'].to_csv(os.path.join(work, 'seg_test_val.csv'))
+        transformed_csv_dict[col]['train'].to_csv(os.path.join(work, f'seg_test_train_{os.getlogin()}.csv'))
+        transformed_csv_dict[col]['val'].to_csv(os.path.join(work, f'seg_test_val_{os.getlogin()}.csv'))
         task_runner = copy(plan).get_task_runner(collaborator_data_loaders[col])
 
     if use_pretrained_model:
