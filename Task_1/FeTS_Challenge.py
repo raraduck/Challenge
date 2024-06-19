@@ -271,7 +271,7 @@ if sys.argv[1] == 'train':
     
             pre_cost = [pre_loss_dict[col_name] for col_name in col_names]
             post_cost = [post_loss_dict[col_name] for col_name in col_names]
-            deriv = [abs(pre - post) for (pre, post) in zip(pre_cost, post_cost)]
+            deriv = [max(0, pre - post) for (pre, post) in zip(pre_cost, post_cost)]
             total_deriv = sum(deriv)
             deriv = [el/total_deriv for el in deriv]
             PID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
