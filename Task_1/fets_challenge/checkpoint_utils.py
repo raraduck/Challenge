@@ -3,6 +3,7 @@ import pandas as pd
 import pickle
 from pathlib import Path
 from glob import glob
+import socket
 from sys import exit
 from logging import getLogger
 
@@ -11,13 +12,13 @@ logger = getLogger(__name__)
 def setup_checkpoint_folder():
     # Create checkpoint
     Path("checkpoint").mkdir(parents=True, exist_ok=True)
-    existing_checkpoints = glob(f'checkpoint/experiment_{os.getlogin()}_*')
+    existing_checkpoints = glob(f'checkpoint/experiment_{socket.gethostname()}_*')
     if len(existing_checkpoints) == 0:
       checkpoint_num = 1
     else:
       # Increment the existing checkpoint by 1
-      checkpoint_num = sorted([int(x.replace(f'checkpoint/experiment_{os.getlogin()}_','')) for x in existing_checkpoints])[-1] + 1
-    experiment_folder = f'experiment_{os.getlogin()}_{checkpoint_num}'
+      checkpoint_num = sorted([int(x.replace(f'checkpoint/experiment_{socket.gethostname()}_','')) for x in existing_checkpoints])[-1] + 1
+    experiment_folder = f'experiment_{socket.gethostname()}_{checkpoint_num}'
     checkpoint_folder = f'checkpoint/{experiment_folder}'
     Path(checkpoint_folder).mkdir(parents=True, exist_ok=False)
     return experiment_folder
