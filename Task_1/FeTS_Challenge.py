@@ -24,19 +24,34 @@ assert os.path.isdir(brats_training_data_parent_dir), f"not exist folder {brats_
 device = 'cuda'
 validation_csv_filename = 'validation.csv'
 
-if sys.argv[1] == 'train':
-    institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
+if sys.argv[1] in ['train', 'training']:
+    assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
+    rounds_to_train = int(sys.argv[2])
+
+    institution_split_csv_filename = sys.argv[3] # 'FeTS2_stage1_2.csv'
     home = str(Path.home())
     trg_folder = os.path.join(home, f'.local/{workspace}')
     trg_path = os.path.join(trg_folder, institution_split_csv_filename)
     assert os.path.exists(trg_path), f"{trg_path} not exists"
 
-    assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
-    rounds_to_train = int(sys.argv[2])
+    assert isinstance(int(sys.argv[4]), int), f"{sys.argv[4]} must be integer"
+    _major_epochs = int(sys.argv[4])
+
+    assert isinstance(int(sys.argv[5]), int), f"{sys.argv[5]} must be integer"
+    _milestone = int(sys.argv[5])
+
+    assert isinstance(int(sys.argv[6]), int), f"{sys.argv[6]} must be integer"
+    _n_nodes = int(sys.argv[6]) # sys.argv[?]
+
+    if sys.argv[1] == 'training': 
+        restore_from_checkpoint_folder = sys.argv[7] # "experiment_vj02_1"
+        ckp_path = os.path.join(trg_folder, 'checkpoint', restore_from_checkpoint_folder)
+        assert os.path.exists(ckp_path), f"{ckp_path} not exists"
+    else:
+        restore_from_checkpoint_folder = None
 
     db_store_rounds = 1
     save_checkpoints = True
-    restore_from_checkpoint_folder = None
 
     # subset split by mean of poisson distribution on every nodes
     df = pd.read_csv(trg_path)
@@ -170,7 +185,7 @@ if sys.argv[1] == 'train':
                                        collaborators_chosen_each_round,
                                        collaborator_times_per_round):
         csv_file = institution_split_csv_filename
-        n_nodes = int(sys.argv[6]) # sys.argv[?]
+        n_nodes = _n_nodes
     
         node_ids = np.unique(np.array([int(el)//100 for el in collaborators])).tolist()
         major_group = [1, 18] if len(node_ids) == 23 else [1, 2, 3, 24, 25, 26]
@@ -222,9 +237,9 @@ if sys.argv[1] == 'train':
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
         
-        major_epochs = int(sys.argv[4])
+        major_epochs = _major_epochs
         minor_epochs = 1
-        milestone = int(sys.argv[5])
+        milestone = _milestone
                                       
         epochs_per_round = major_epochs if fl_round < milestone else minor_epochs
         learning_rate = 1e-3 if fl_round < milestone  else 1e-4
