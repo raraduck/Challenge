@@ -3,6 +3,7 @@
 
 import os
 import numpy as np
+import pandas as pd
 import sys
 import shutil
 from pathlib import Path
@@ -26,11 +27,46 @@ validation_csv_filename = 'validation.csv'
 if sys.argv[1] == 'train':
     institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
     home = str(Path.home())
-    trg_path = os.path.join(home, f'.local/{workspace}', institution_split_csv_filename)
+    trg_folder = os.path.join(home, f'.local/{workspace}')
+    trg_path = os.path.join(trg_folder, institution_split_csv_filename)
     assert os.path.exists(trg_path), f"{trg_path} not exists"
 
     assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
     rounds_to_train = int(sys.argv[2])
+
+    db_store_rounds = 1
+    save_checkpoints = True
+    restore_from_checkpoint_folder = None
+
+    # subset split by mean of poisson distribution on every nodes
+    df = pd.read_csv(trg_path)
+    df['Partition_ID'] = df['Partition_ID'].astype(int) * 100
+    df['Partition_ID'] = df['Partition_ID'].astype(str)
+
+    unique_values = df['Partition_ID'].unique()
+
+    frequency = df['Partition_ID'].value_counts()
+    lambda_ = frequency.mean()
+    max_size = frequency.max()
+    # subset_factor = lambda_/max_size
+    # subset_size = int(lambda_*subset_factor)
+    subset_lowerbound = 2 * np.sqrt(lambda_)
+    subset_size = int(lambda_ - subset_lowerbound)
+
+    print(unique_values)
+    print(df.columns)
+
+    for pid in unique_values:
+        indices = df[df['Partition_ID'] == pid].index
+        df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
+
+    out_path = os.path.join(trg_folder, f"subset_{institution_split_csv_filename}")    
+    df.to_csv(out_path, index=False)
+    print("Data saved to 'subset_partitioning.csv'.")
+
+    institution_split_csv_filename = f"subset_{institution_split_csv_filename}"
+
+    # exit(0)
 
     def major_minor_collaborator_on_rounds(collaborators,
                                 db_iterator,
@@ -128,6 +164,40 @@ if sys.argv[1] == 'train':
 
         return [str(el) for el in training_collaborators]
     
+    def subset_selection_for_collaborators_on_rounds(collaborators,
+                                       db_iterator,
+                                       fl_round,
+                                       collaborators_chosen_each_round,
+                                       collaborator_times_per_round):
+        csv_file = institution_split_csv_filename
+        n_nodes = int(sys.argv[6]) # sys.argv[?]
+    
+        node_ids = np.unique(np.array([int(el)//100 for el in collaborators])).tolist()
+        major_group = [1, 18] if len(node_ids) == 23 else [1, 2, 3, 24, 25, 26]
+        minor_group = [el for el in node_ids if el not in major_group]
+        major_np = np.array(major_group)
+        minor_np = np.array(minor_group)
+        np.random.shuffle(major_np)
+        np.random.shuffle(minor_np)
+        major_list = major_np.tolist()
+        minor_list = minor_np.tolist()
+        n_major = len(major_list) if n_nodes >= len(major_list) else n_nodes
+        n_minor = max(0, n_nodes-len(major_list))
+        nodes_selected = [
+            *major_list[:n_major],
+            *minor_list[:n_minor]
+        ]
+    
+        subset_list = [int(el) for el in collaborators]
+        subset_np = np.array(subset_list)/100
+        subsets_selected = []
+        for node_id in nodes_selected:
+            subsets = subset_np[subset_np.astype('int') == node_id] * 100
+            np.random.shuffle(subsets)
+            subsets_selected = [*subsets_selected, int(subsets[0])]
+    
+        return [str(el) for el in subsets_selected]
+                                       
     # a very simple function. Everyone trains every round.
     def all_collaborators_train(collaborators,
                                 db_iterator,
@@ -151,37 +221,16 @@ if sys.argv[1] == 'train':
                                   fl_round,
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
-
-        #epochs_per_round = 10.0
-        #decay = min(fl_round, 10)
-        #decay = 0.9 ** decay
-        #epochs_per_round *= decay    
-        #epochs_per_round = max(1,int(epochs_per_round))
-
-        epochs_per_round = 5 if fl_round < 10 else 1
-        learning_rate = 1e-3 if fl_round < 10  else 1e-4
+        
+        major_epochs = int(sys.argv[4])
+        minor_epochs = 1
+        milestone = int(sys.argv[5])
+                                      
+        epochs_per_round = major_epochs if fl_round < milestone else minor_epochs
+        learning_rate = 1e-3 if fl_round < milestone  else 1e-4
         
         return (learning_rate, epochs_per_round)
-        #if institution_split_csv_filename == 'FeTS2_stage1_2.csv':
-            #if fl_round % 4 == 0:
-                #epochs_per_round = 1
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-            #else:
-                #epochs_per_round = 0.3
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-        #elif institution_split_csv_filename == 'FeTS1_stage1_2.csv':
-            #if fl_round % 5 == 0:
-                #epochs_per_round = 1
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-            #else:
-                #epochs_per_round = 0.2
-                #learning_rate = 1e-3
-                #return (learning_rate, epochs_per_round)
-        #else:
-            #raise NotImplementedError(f"{institution_split_csv_filename} not implemented")
+
     
     def constant_hyper_parameters(collaborators,
                                   db_iterator,
@@ -206,38 +255,7 @@ if sys.argv[1] == 'train':
         epochs_per_round = 1
         learning_rate = 1e-3
         return (learning_rate, epochs_per_round)
-    
-    
-    # this example trains less at each round
-    def train_less_each_round(collaborators,
-                              db_iterator,
-                              fl_round,
-                              collaborators_chosen_each_round,
-                              collaborator_times_per_round):
-        """Set the training hyper-parameters for the round.
-        
-        Args:
-            collaborators: list of strings of collaborator names
-            db_iterator: iterator over history of all tensors.
-                Columns: ['tensor_name', 'round', 'tags', 'nparray']
-            fl_round: round number
-            collaborators_chosen_each_round: a dictionary of {round: list of collaborators}. Each list indicates which collaborators trained in that given round.
-            collaborator_times_per_round: a dictionary of {round: {collaborator: total_time_taken_in_round}}.  
-        Returns:
-            tuple of (learning_rate, epochs_per_round) 
-        """
-    
-        # we'll have a constant learning_rate
-        learning_rate = 1e-3
-        
-        # our epochs per round will start at 1.0 and decay by 0.9 for the first 10 rounds
-        epochs_per_round = 1.0
-        decay = min(fl_round, 10)
-        decay = 0.9 ** decay
-        epochs_per_round *= decay    
-        epochs_per_round = max(1,int(epochs_per_round))
-        
-        return (learning_rate, epochs_per_round)
+                                      
     
     # the simple example of weighted FedAVG
     def weighted_average_aggregation(local_tensors,
@@ -319,8 +337,8 @@ if sys.argv[1] == 'train':
     
             pre_cost = [pre_loss_dict[col_name] for col_name in col_names]
             post_cost = [post_loss_dict[col_name] for col_name in col_names]
-            deriv = [abs(pre - post) for (pre, post) in zip(pre_cost, post_cost)]
-            total_deriv = sum(deriv)
+            deriv = [max(0, pre - post) for (pre, post) in zip(pre_cost, post_cost)]
+            total_deriv = sum(deriv) + 1e-10
             deriv = [el/total_deriv for el in deriv]
             PID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
     
@@ -331,67 +349,6 @@ if sys.argv[1] == 'train':
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=weight, axis=0)
 
-    
-    # here we will clip outliers by clipping deltas to the Nth percentile (e.g. 80th percentile)
-    def clipped_aggregation(local_tensors,
-                            tensor_db,
-                            tensor_name,
-                            fl_round,
-                            collaborators_chosen_each_round,
-                            collaborator_times_per_round):
-        """Aggregate tensors. This aggregator clips all tensor values to the 80th percentile of the absolute values to prevent extreme changes.
-    
-        Args:
-            local_tensors(list[openfl.utilities.LocalTensor]): List of local tensors to aggregate.
-            tensor_db: pd.DataFrame that contains global tensors / metrics.
-                Columns: ['tensor_name', 'origin', 'round', 'report',  'tags', 'nparray']
-            tensor_name: name of the tensor
-            fl_round: round number
-            collaborators_chosen_each_round: a dictionary of {round: list of collaborators}. Each list indicates which collaborators trained in that given round.
-            collaborator_times_per_round: a dictionary of {round: {collaborator: total_time_taken_in_round}}.
-        """
-        # the percentile we will clip to
-        clip_to_percentile = 80
-        
-        # first, we need to determine how much each local update has changed the tensor from the previous value
-        # we'll use the tensor_db search function to find the 
-        previous_tensor_value = tensor_db.search(tensor_name=tensor_name, fl_round=fl_round, tags=('model',), origin='aggregator')
-    
-        if previous_tensor_value.shape[0] > 1:
-            print(previous_tensor_value)
-            raise ValueError(f'found multiple matching tensors for {tensor_name}, tags=(model,), origin=aggregator')
-    
-        if previous_tensor_value.shape[0] < 1:
-            # no previous tensor, so just return the weighted average
-            return weighted_average_aggregation(local_tensors,
-                                                tensor_db,
-                                                tensor_name,
-                                                fl_round,
-                                                collaborators_chosen_each_round,
-                                                collaborator_times_per_round)
-    
-        previous_tensor_value = previous_tensor_value.nparray.iloc[0]
-    
-        # compute the deltas for each collaborator
-        deltas = [t.tensor - previous_tensor_value for t in local_tensors]
-    
-        # get the target percentile using the absolute values of the deltas
-        clip_value = np.percentile(np.abs(deltas), clip_to_percentile)
-            
-        # let's log what we're clipping to
-        logger.info("Clipping tensor {} to value {}".format(tensor_name, clip_value))
-        
-        # now we can compute our clipped tensors
-        clipped_tensors = []
-        for delta, t in zip(deltas, local_tensors):
-            new_tensor = previous_tensor_value + np.clip(delta, -1 * clip_value, clip_value)
-            clipped_tensors.append(new_tensor)
-            
-        # get an array of weight values for the weighted average
-        weights = [t.weight for t in local_tensors]
-    
-        # return the weighted average of the clipped tensors
-        return np.average(clipped_tensors, weights=weights, axis=0)
     
     # Adapted from FeTS Challenge 2021
     # Federated Brain Tumor Segmentation:Multi-Institutional Privacy-Preserving Collaborative Learning
@@ -531,7 +488,7 @@ if sys.argv[1] == 'train':
     
     # change any of these you wish to your custom functions. You may leave defaults if you wish.
     aggregation_function = fets2022_1_aggregation # weighted_average_aggregation# FedAvgM_Selection  # weighted_average_aggregation
-    choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
+    choose_training_collaborators = subset_selection_for_collaborators_on_rounds # all_collaborators_train
     training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
     
     # As mentioned in the 'Custom Aggregation Functions' section (above), six 
@@ -552,7 +509,6 @@ if sys.argv[1] == 'train':
     
     # increase this if you need a longer history for your algorithms
     # decrease this if you need to reduce system RAM consumption
-    db_store_rounds = 1
     
     # this is passed to PyTorch, so set it accordingly for your system
     # device = 'cuda'
@@ -563,14 +519,12 @@ if sys.argv[1] == 'train':
     
     # (bool) Determines whether checkpoints should be saved during the experiment. 
     # The checkpoints can grow quite large (5-10GB) so only the latest will be saved when this parameter is enabled
-    save_checkpoints = True
     
     # path to previous checkpoint folder for experiment that was stopped before completion. 
     # Checkpoints are stored in ~/.local/workspace/checkpoint, and you should provide the experiment directory 
     # relative to this path (i.e. 'experiment_1'). Please note that if you restore from a checkpoint, 
     # and save checkpoint is set to True, then the checkpoint you restore from will be subsequently overwritten.
     # restore_from_checkpoint_folder = 'experiment_1'
-    restore_from_checkpoint_folder = None
     
     
     # the scores are returned in a Pandas dataframe
