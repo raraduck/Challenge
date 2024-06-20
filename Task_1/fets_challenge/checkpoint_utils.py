@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import pickle
 from pathlib import Path
@@ -10,7 +11,7 @@ logger = getLogger(__name__)
 def setup_checkpoint_folder():
     # Create checkpoint
     Path("checkpoint").mkdir(parents=True, exist_ok=True)
-    existing_checkpoints = glob('checkpoint/*')
+    existing_checkpoints = glob(f'checkpoint/experiment_{os.getlogin()}_*')
     if len(existing_checkpoints) == 0:
       checkpoint_num = 1
     else:

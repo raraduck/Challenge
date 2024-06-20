@@ -3,6 +3,7 @@
 
 import os
 import numpy as np
+import pandas as pd
 import sys
 import shutil
 from pathlib import Path
@@ -26,7 +27,8 @@ validation_csv_filename = 'validation.csv'
 if sys.argv[1] == 'train':
     institution_split_csv_filename = sys.argv[3]# 'FeTS2_stage1_2.csv'
     home = str(Path.home())
-    trg_path = os.path.join(home, f'.local/{workspace}', institution_split_csv_filename)
+    trg_folder = os.path.join(home, f'.local/{workspace}')
+    trg_path = os.path.join(trg_folder, institution_split_csv_filename)
     assert os.path.exists(trg_path), f"{trg_path} not exists"
 
     assert isinstance(int(sys.argv[2]), int), f"{sys.argv[2]} must be integer"
@@ -35,6 +37,36 @@ if sys.argv[1] == 'train':
     db_store_rounds = 1
     save_checkpoints = True
     restore_from_checkpoint_folder = None
+
+    # subset split by mean of poisson distribution on every nodes
+    df = pd.read_csv(trg_path)
+    df['Partition_ID'] = df['Partition_ID'].astype(int) * 100
+    df['Partition_ID'] = df['Partition_ID'].astype(str)
+
+    unique_values = df['Partition_ID'].unique()
+
+    frequency = df['Partition_ID'].value_counts()
+    lambda_ = frequency.mean()
+    max_size = frequency.max()
+    # subset_factor = lambda_/max_size
+    # subset_size = int(lambda_*subset_factor)
+    subset_lowerbound = 2 * np.sqrt(lambda_)
+    subset_size = int(lambda_ - subset_lowerbound)
+
+    print(unique_values)
+    print(df.columns)
+
+    for pid in unique_values:
+        indices = df[df['Partition_ID'] == pid].index
+        df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
+
+    out_path = os.path.join(trg_folder, f"subset_{institution_split_csv_filename}")    
+    df.to_csv(out_path, index=False)
+    print("Data saved to 'subset_partitioning.csv'.")
+
+    institution_split_csv_filename = f"subset_{institution_split_csv_filename}"
+
+    # exit(0)
 
     def major_minor_collaborator_on_rounds(collaborators,
                                 db_iterator,
@@ -132,13 +164,13 @@ if sys.argv[1] == 'train':
 
         return [str(el) for el in training_collaborators]
     
-    def subset_selection_from_major_minor_collaborators_on_rounds(collaborators,
+    def subset_selection_for_collaborators_on_rounds(collaborators,
                                        db_iterator,
                                        fl_round,
                                        collaborators_chosen_each_round,
                                        collaborator_times_per_round):
-        csv_file = 'updated_partitioning_1.csv' # ? sys.argv[?]
-        n_nodes = 10 # sys.argv[?]
+        csv_file = institution_split_csv_filename
+        n_nodes = int(sys.argv[6]) # sys.argv[?]
     
         node_ids = np.unique(np.array([int(el)//100 for el in collaborators])).tolist()
         major_group = [1, 18] if len(node_ids) == 23 else [1, 2, 3, 24, 25, 26]
@@ -156,7 +188,7 @@ if sys.argv[1] == 'train':
             *minor_list[:n_minor]
         ]
     
-        subset_list = collaborators
+        subset_list = [int(el) for el in collaborators]
         subset_np = np.array(subset_list)/100
         subsets_selected = []
         for node_id in nodes_selected:
@@ -306,7 +338,7 @@ if sys.argv[1] == 'train':
             pre_cost = [pre_loss_dict[col_name] for col_name in col_names]
             post_cost = [post_loss_dict[col_name] for col_name in col_names]
             deriv = [max(0, pre - post) for (pre, post) in zip(pre_cost, post_cost)]
-            total_deriv = sum(deriv)
+            total_deriv = sum(deriv) + 1e-10
             deriv = [el/total_deriv for el in deriv]
             PID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
     
@@ -456,7 +488,7 @@ if sys.argv[1] == 'train':
     
     # change any of these you wish to your custom functions. You may leave defaults if you wish.
     aggregation_function = fets2022_1_aggregation # weighted_average_aggregation# FedAvgM_Selection  # weighted_average_aggregation
-    choose_training_collaborators = major_minor_collaborator_on_rounds # all_collaborators_train
+    choose_training_collaborators = subset_selection_for_collaborators_on_rounds # all_collaborators_train
     training_hyper_parameters_for_round = major_minor_parameters # constant_hyper_parameters
     
     # As mentioned in the 'Custom Aggregation Functions' section (above), six 

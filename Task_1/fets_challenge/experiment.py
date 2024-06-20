@@ -245,7 +245,7 @@ def run_challenge_experiment(aggregation_function,
     path.insert(0, str(work))
     
     # create gandlf_csv and get collaborator names
-    gandlf_csv_path = os.path.join(work, 'gandlf_paths_{os.getlogin()}.csv')
+    gandlf_csv_path = os.path.join(work, f'gandlf_paths_{os.getlogin()}.csv')
     # split_csv_path = os.path.join(work, institution_split_csv_filename)
     collaborator_names = construct_fedsim_csv(brats_training_data_parent_dir,
                                               institution_split_csv_filename,
