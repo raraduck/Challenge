@@ -65,8 +65,8 @@ if sys.argv[1] in ['train', 'training']:
     max_size = frequency.max()
     # subset_factor = lambda_/max_size
     # subset_size = int(lambda_*subset_factor)
-    subset_lowerbound = 3 * np.sqrt(lambda_)
-    subset_size = int(lambda_ - subset_lowerbound)
+    subset_lowerbound = 2 * np.sqrt(lambda_)
+    subset_size = int(max(1, lambda_ - subset_lowerbound))
 
     print(unique_values)
     print(df.columns)
@@ -190,24 +190,27 @@ if sys.argv[1] in ['train', 'training']:
         node_ids = np.unique(np.array([int(el)//100 for el in collaborators])).tolist()
         major_group = [1, 18] if len(node_ids) == 23 else [1, 2, 3, 24, 25, 26]
         minor_group = [el for el in node_ids if el not in major_group]
-        major_np = np.array(major_group)
-        minor_np = np.array(minor_group)
-        np.random.shuffle(major_np)
-        np.random.shuffle(minor_np)
-        major_list = major_np.tolist()
-        minor_list = minor_np.tolist()
-        # if fl_round == 0:
-        #     major_np = np.array(major_group)
-        #     minor_np = np.array(minor_group)
-        #     np.random.shuffle(major_np)
-        #     np.random.shuffle(minor_np)
-        #     major_list = major_np.tolist()
-        #     minor_list = minor_np.tolist()
-        # else:
-        #     sorted_list = sorted(collaborator_times_per_round[fl_round-1].items(), key=lambda item: item[1])
-        #     ordered_by_time = [int(el[0]) for el in sorted_list]
-        #     major_list = [el for el in ordered_by_time if el in major_group]
-        #     minor_list = [el for el in ordered_by_time if el in minor_group]
+                                           
+        # major_np = np.array(major_group)
+        # minor_np = np.array(minor_group)
+        # np.random.shuffle(major_np)
+        # np.random.shuffle(minor_np)
+        # major_list = major_np.tolist()
+        # minor_list = minor_np.tolist()
+                                           
+        if fl_round == 0:
+            major_np = np.array(major_group)
+            minor_np = np.array(minor_group)
+            np.random.shuffle(major_np)
+            np.random.shuffle(minor_np)
+            major_list = major_np.tolist()
+            minor_list = minor_np.tolist()
+        else:
+            sorted_list = sorted(collaborator_times_per_round[fl_round-1].items(), key=lambda item: item[1])
+            ordered_by_time = [int(el[0]) for el in sorted_list]
+            major_list = [el for el in ordered_by_time if el in major_group]
+            minor_list = [el for el in ordered_by_time if el in minor_group]
+            
         n_major = len(major_list) if n_nodes >= len(major_list) else n_nodes
         n_minor = max(0, n_nodes-len(major_list))
         nodes_selected = [
