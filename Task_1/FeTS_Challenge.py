@@ -218,7 +218,7 @@ if sys.argv[1] in ['train', 'training']:
                 np.random.shuffle(subsets_of_node) 
             else: 
                 subsets_of_node = [el for el in ordered_by_time if el in subsets_of_node]
-            subsets_selected = [*subsets_selected, int(subsets[0])]
+            subsets_selected = [*subsets_selected, int(subsets_of_node[0])]
     
         return [str(el) for el in subsets_selected]
                                        
