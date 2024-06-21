@@ -65,7 +65,7 @@ if sys.argv[1] in ['train', 'training']:
     max_size = frequency.max()
     # subset_factor = lambda_/max_size
     # subset_size = int(lambda_*subset_factor)
-    subset_lowerbound = 2 * np.sqrt(lambda_)
+    subset_lowerbound = 3 * np.sqrt(lambda_)
     subset_size = int(lambda_ - subset_lowerbound)
 
     print(unique_values)
