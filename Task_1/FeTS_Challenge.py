@@ -43,7 +43,7 @@ if sys.argv[1] in ['train', 'training']:
     assert isinstance(int(sys.argv[6]), int), f"{sys.argv[6]} must be integer"
     _n_nodes = int(sys.argv[6]) # sys.argv[?]
     
-    assert isinstance(int(sys.argv[7]), int), f"{sys.argv[7]} must be float"
+    assert isinstance(float(sys.argv[7]), float), f"{sys.argv[7]} must be float"
     _z_score = float(sys.argv[7]) # sys.argv[?]
 
     if sys.argv[1] == 'training': 
