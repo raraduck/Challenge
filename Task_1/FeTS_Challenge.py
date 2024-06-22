@@ -158,7 +158,7 @@ if sys.argv[1] in ['train', 'training']:
         minor_epochs = 1
         milestone = _milestone
                                       
-        epochs_per_round = major_epochs if fl_round < milestone else minor_epochs
+        epochs_per_round = major_epochs # major_epochs if fl_round < milestone else minor_epochs
         learning_rate = 1e-3 if fl_round < milestone  else 1e-4
         
         return (learning_rate, epochs_per_round)
