@@ -42,9 +42,12 @@ if sys.argv[1] in ['train', 'training']:
 
     assert isinstance(int(sys.argv[6]), int), f"{sys.argv[6]} must be integer"
     _n_nodes = int(sys.argv[6]) # sys.argv[?]
+    
+    assert isinstance(int(sys.argv[7]), int), f"{sys.argv[7]} must be float"
+    _z_score = float(sys.argv[7]) # sys.argv[?]
 
     if sys.argv[1] == 'training': 
-        restore_from_checkpoint_folder = sys.argv[7] # "experiment_vj02_1"
+        restore_from_checkpoint_folder = sys.argv[8] # "experiment_vj02_1"
         ckp_path = os.path.join(trg_folder, 'checkpoint', restore_from_checkpoint_folder)
         assert os.path.exists(ckp_path), f"{ckp_path} not exists"
     else:
@@ -65,8 +68,8 @@ if sys.argv[1] in ['train', 'training']:
     max_size = frequency.max()
     # subset_factor = lambda_/max_size
     # subset_size = int(lambda_*subset_factor)
-    subset_lowerbound = 2 * np.sqrt(lambda_)
-    subset_size = int(max(1, lambda_ - subset_lowerbound))
+    std_lb = np.sqrt(lambda_)
+    subset_size = int(max(1, lambda_ - _z_score * std_lb))
 
     print(unique_values)
     print(df.columns)
@@ -205,19 +208,20 @@ if sys.argv[1] in ['train', 'training']:
             *minor_list[:n_minor]
         ]
 
-        if fl_round > 0:
-            sorted_list = sorted(collaborator_times_per_round[fl_round-1].items(), key=lambda item: item[1])
-            ordered_by_time = [int(el[0]) for el in sorted_list]
+        # if fl_round > 0:
+        #     sorted_list = sorted(collaborator_times_per_round[fl_round-1].items(), key=lambda item: item[1])
+        #     ordered_by_time = [int(el[0]) for el in sorted_list]
                                            
         subset_list = [int(el) for el in collaborators]
         subset_np = np.array(subset_list)/100
         subsets_selected = []
         for node_id in nodes_selected:
             subsets_of_node = subset_np[subset_np.astype('int') == node_id] * 100
-            if fl_round == 0:
-                np.random.shuffle(subsets_of_node) 
-            else: 
-                subsets_of_node = [el for el in ordered_by_time if el in subsets_of_node]
+            np.random.shuffle(subsets_of_node) 
+            # if fl_round == 0:
+            #     np.random.shuffle(subsets_of_node) 
+            # else: 
+            #     subsets_of_node = [el for el in ordered_by_time if el in subsets_of_node]
             subsets_selected = [*subsets_selected, int(subsets_of_node[0])]
     
         return [str(el) for el in subsets_selected]
