@@ -35,7 +35,7 @@ if sys.argv[1] in ['train', 'training']:
     assert os.path.exists(trg_path), f"{trg_path} not exists"
 
     assert isinstance(int(sys.argv[4]), int), f"{sys.argv[4]} must be integer"
-    _major_epochs = int(sys.argv[4])
+    _epochs_per_round = int(sys.argv[4])
 
     assert isinstance(int(sys.argv[5]), int), f"{sys.argv[5]} must be integer"
     _milestone = int(sys.argv[5])
@@ -154,11 +154,11 @@ if sys.argv[1] in ['train', 'training']:
                                   collaborators_chosen_each_round,
                                   collaborator_times_per_round):
         
-        major_epochs = _major_epochs
-        minor_epochs = 1
-        milestone = _milestone
+        # major_epochs = _peoch
+        # minor_epochs = 1
                                       
-        epochs_per_round = major_epochs # major_epochs if fl_round < milestone else minor_epochs
+        epochs_per_round = _epochs_per_round # major_epochs if fl_round < milestone else minor_epochs
+        milestone = _milestone
         learning_rate = 1e-3 if fl_round < milestone  else 1e-4
         
         return (learning_rate, epochs_per_round)
