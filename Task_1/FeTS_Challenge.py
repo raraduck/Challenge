@@ -225,7 +225,11 @@ if sys.argv[1] in ['train', 'training']:
                                  fl_round,
                                  collaborators_chosen_each_round,
                                  collaborator_times_per_round):
-        if fl_round > 5:
+        if fl_round < _milestone:
+            weight = [t.weight for t in local_tensors]
+            tensor_values = [t.tensor for t in local_tensors]
+            return np.average(tensor_values, weights=weight, axis=0)
+        else:
             # 검색 조건 설정
             pre_tags = [(el, 'metric', 'validate_agg') for el in collaborators_chosen_each_round[fl_round]]
             post_tags = [(el, 'metric', 'validate_local') for el in collaborators_chosen_each_round[fl_round]]
@@ -276,10 +280,6 @@ if sys.argv[1] in ['train', 'training']:
     
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=PID, axis=0)
-        else:
-            weight = [t.weight for t in local_tensors]
-            tensor_values = [t.tensor for t in local_tensors]
-            return np.average(tensor_values, weights=weight, axis=0)
 
     
     # Adapted from FeTS Challenge 2021
