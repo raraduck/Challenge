@@ -281,6 +281,67 @@ if sys.argv[1] in ['train', 'training']:
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=PID, axis=0)
 
+    def fets2024_1_aggregation(local_tensors,
+                                 tensor_db,
+                                 tensor_name,
+                                 fl_round,
+                                 collaborators_chosen_each_round,
+                                 collaborator_times_per_round):
+        if fl_round < _milestone:
+            weight = [t.weight for t in local_tensors]
+            tensor_values = [t.tensor for t in local_tensors]
+            return np.average(tensor_values, weights=weight, axis=0)
+        else:
+            # 검색 조건 설정
+            pre_tags = [(el, 'metric', 'validate_agg') for el in collaborators_chosen_each_round[fl_round]]
+            post_tags = [(el, 'metric', 'validate_local') for el in collaborators_chosen_each_round[fl_round]]
+            # search_tags = [('1', 'metric'), ('2', 'metric'), ('3', 'metric')]
+    
+            col_names = [t.col_name for t in local_tensors]
+            # 조건에 맞는 데이터 필터링
+            pre_df = tensor_db[
+                (tensor_db['tensor_name'] == 'valid_loss') &
+                (tensor_db['round'] == (fl_round)) &
+                (tensor_db['tags'].apply(lambda x: x in pre_tags)) &
+                (tensor_db['origin'] == 'aggregator')
+            ]
+            pre_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in pre_df.iterrows()}
+            post_df = tensor_db[
+                (tensor_db['tensor_name'] == 'valid_loss') &
+                (tensor_db['round'] == (fl_round)) &
+                (tensor_db['tags'].apply(lambda x: x in post_tags)) &
+                (tensor_db['origin'] == 'aggregator')
+            ]
+            post_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in post_df.iterrows()}
+    
+            past5_rounds = range(max(0, fl_round - 4), fl_round + 1)  # fl_round에서 4 라운드 이전까지
+            # ***** el 이 이전 값에서 발견되어야함
+            integral_loss_df = tensor_db[
+                (tensor_db['tensor_name'] == 'valid_loss') &
+                (tensor_db['round'].isin(past5_rounds)) &
+                (tensor_db['tags'].apply(lambda x: x in post_tags)) &
+                (tensor_db['origin'] == 'aggregator')
+            ]
+    
+            integral_loss_dict = {k:0 for k in col_names}
+            for idx, row in integral_loss_df.iterrows():
+                k = row['tags'][0]
+                integral_loss_dict[k] += float(row['nparray'])
+            integ = [integral_loss_dict[col_name] for col_name in col_names]
+            total_integ = sum(integ)
+            integ = [el / total_integ for el in integ]
+    
+            weight = [t.weight for t in local_tensors]
+    
+            pre_cost = [pre_loss_dict[col_name] for col_name in col_names]
+            post_cost = [post_loss_dict[col_name] for col_name in col_names]
+            deriv = [max(0, pre - post) for (pre, post) in zip(pre_cost, post_cost)]
+            total_deriv = sum(deriv) + 1e-10
+            deriv = [el/total_deriv for el in deriv]
+            PID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
+    
+            tensor_values = [t.tensor for t in local_tensors]
+            return np.average(tensor_values, weights=deriv, axis=0)
     
     # Adapted from FeTS Challenge 2021
     # Federated Brain Tumor Segmentation:Multi-Institutional Privacy-Preserving Collaborative Learning
