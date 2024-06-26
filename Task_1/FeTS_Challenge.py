@@ -225,7 +225,7 @@ if sys.argv[1] in ['train', 'training']:
                                  fl_round,
                                  collaborators_chosen_each_round,
                                  collaborator_times_per_round):
-        if fl_round > 0:
+        if fl_round > 5:
             # 검색 조건 설정
             pre_tags = [(el, 'metric', 'validate_agg') for el in collaborators_chosen_each_round[fl_round]]
             post_tags = [(el, 'metric', 'validate_local') for el in collaborators_chosen_each_round[fl_round]]
