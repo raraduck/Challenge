@@ -68,8 +68,10 @@ if sys.argv[1] in ['train', 'training']:
     max_size = frequency.max()
     # subset_factor = lambda_/max_size
     # subset_size = int(lambda_*subset_factor)
-    std_lb = np.sqrt(lambda_)
-    subset_size = int(max(1, lambda_ - _z_score * std_lb))
+    std_ = np.sqrt(lambda_)
+    upper_bound = lambda_ + (_z_score * std_)
+    lower_bound = lambda_ - (_z_score * std_)
+    subset_size = int(max(1, upper_bound))
 
     print(unique_values)
     print(df.columns)
