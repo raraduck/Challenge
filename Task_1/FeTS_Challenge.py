@@ -397,7 +397,7 @@ if sys.argv[1] in ['train', 'training']:
             # for idx, row in integral_loss_df.iterrows():
             #     k = row['tags'][0]
             #     integral_loss_dict[k] += float(row['nparray'])
-            integ = [post + (max(0, pre - post)/2) for (pre, post) in zip(pre_cost, post_cost)]
+            integ = [min(pre, post) + (max(0, pre - post)/2) for (pre, post) in zip(pre_cost, post_cost)]
             total_integ = sum(integ)
             integ = [el / total_integ for el in integ]
 
