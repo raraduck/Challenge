@@ -8,8 +8,8 @@ import sys
 import shutil
 from pathlib import Path
 import argparse
-from fets_challenge import run_challenge_experiment
-from fets_challenge.experiment import logger
+# from fets_challenge import run_challenge_experiment
+# from fets_challenge.experiment import logger
 
 def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     # subset split by mean of poisson distribution on every nodes
@@ -51,11 +51,11 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     # print(subset_dict)
     primary_subset_dict = {k:v for k,v in subset_dict.items() if k in primary_group}
     for orig,subs in primary_subset_dict.items():
-        print(f"PRIMARY[{orig}]({len(subs)}): {subs}")
+        print(f"PRIMARY[{orig}]({len(subs)})({subset_size}): {subs}")
     # print(primary_subset_dict)
     secondary_subset_dict = {k:v for k,v in subset_dict.items() if k in secondary_group}
     for orig,subs in secondary_subset_dict.items():
-        print(f"SECONDARY[{orig}]({len(subs)}): {subs}")
+        print(f"SECONDARY[{orig}]({len(subs)})({subset_size}): {subs}")
 
     out_path = os.path.join(trg_folder, f"subset_{argv.institution_split_csv_filename}")    
     df.to_csv(out_path, index=False)
@@ -197,19 +197,19 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
 
     include_validation_with_hausdorff=False
     # the scores are returned in a Pandas dataframe
-    scores_dataframe, checkpoint_folder = run_challenge_experiment(
-        aggregation_function=aggregation_function,
-        choose_training_collaborators=choose_training_collaborators,
-        training_hyper_parameters_for_round=training_hyper_parameters_for_round,
-        include_validation_with_hausdorff=include_validation_with_hausdorff,
-        institution_split_csv_filename=institution_split_csv_filename,
-        brats_training_data_parent_dir=brats_training_data_parent_dir,
-        db_store_rounds=db_store_rounds,
-        rounds_to_train=argv.rounds_to_train,
-        device=device,
-        save_checkpoints=save_checkpoints,
-        restore_from_checkpoint_folder = argv.restore_from_checkpoint_folder)
-    scores_dataframe
+    # scores_dataframe, checkpoint_folder = run_challenge_experiment(
+    #     aggregation_function=aggregation_function,
+    #     choose_training_collaborators=choose_training_collaborators,
+    #     training_hyper_parameters_for_round=training_hyper_parameters_for_round,
+    #     include_validation_with_hausdorff=include_validation_with_hausdorff,
+    #     institution_split_csv_filename=institution_split_csv_filename,
+    #     brats_training_data_parent_dir=brats_training_data_parent_dir,
+    #     db_store_rounds=db_store_rounds,
+    #     rounds_to_train=argv.rounds_to_train,
+    #     device=device,
+    #     save_checkpoints=save_checkpoints,
+    #     restore_from_checkpoint_folder = argv.restore_from_checkpoint_folder)
+    # scores_dataframe
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
