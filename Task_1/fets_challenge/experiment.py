@@ -28,7 +28,7 @@ from .checkpoint_utils import setup_checkpoint_folder, save_checkpoint, load_che
 # HOUR = 60 * MINUTE
 # DAY = 24 * HOUR
 # WEEK = 7 * DAY
-MAX_SIMULATION_TIME = 7 * 24 * 60 * 60 
+MAX_SIMULATION_TIME = 5 * 7 * 24 * 60 * 60 
 
 ## COLLABORATOR TIMING DISTRIBUTIONS
 # These data are derived from the actual timing information in the real-world FeTS information
