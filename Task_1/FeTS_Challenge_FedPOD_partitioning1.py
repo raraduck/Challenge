@@ -140,7 +140,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                 epochs_per_round = 2
 
         learning_rate = 1e-3
-
+        
         return (learning_rate, epochs_per_round)
 
     def FedPOD_aggregation(local_tensors,
@@ -254,8 +254,8 @@ if __name__ == '__main__':
     parser.add_argument('-C', '--restore_from_checkpoint_folder', type=str, default=None)
     parser.add_argument('-W', '--workspace', type=str, default='workspace')
     parser.add_argument('-R', '--rounds_to_train', type=int, default=30)
-    parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_2.csv')
-    parser.add_argument('-Z', '--z_score', type=float, default=2.58)
+    parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_1.csv')
+    parser.add_argument('-Z', '--z_score', type=float, default=-1.00)
     argv = parser.parse_args(sys.argv[1:])
     print(argv)
 
