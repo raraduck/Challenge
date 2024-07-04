@@ -8,8 +8,8 @@ import sys
 import shutil
 from pathlib import Path
 import argparse
-# from fets_challenge import run_challenge_experiment
-# from fets_challenge.experiment import logger
+from fets_challenge import run_challenge_experiment
+from fets_challenge.experiment import logger
 
 def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     # subset split by mean of poisson distribution on every nodes
@@ -197,19 +197,19 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
 
     include_validation_with_hausdorff=False
     # the scores are returned in a Pandas dataframe
-    # scores_dataframe, checkpoint_folder = run_challenge_experiment(
-    #     aggregation_function=aggregation_function,
-    #     choose_training_collaborators=choose_training_collaborators,
-    #     training_hyper_parameters_for_round=training_hyper_parameters_for_round,
-    #     include_validation_with_hausdorff=include_validation_with_hausdorff,
-    #     institution_split_csv_filename=institution_split_csv_filename,
-    #     brats_training_data_parent_dir=brats_training_data_parent_dir,
-    #     db_store_rounds=db_store_rounds,
-    #     rounds_to_train=argv.rounds_to_train,
-    #     device=device,
-    #     save_checkpoints=save_checkpoints,
-    #     restore_from_checkpoint_folder = argv.restore_from_checkpoint_folder)
-    # scores_dataframe
+    scores_dataframe, checkpoint_folder = run_challenge_experiment(
+        aggregation_function=aggregation_function,
+        choose_training_collaborators=choose_training_collaborators,
+        training_hyper_parameters_for_round=training_hyper_parameters_for_round,
+        include_validation_with_hausdorff=include_validation_with_hausdorff,
+        institution_split_csv_filename=institution_split_csv_filename,
+        brats_training_data_parent_dir=brats_training_data_parent_dir,
+        db_store_rounds=db_store_rounds,
+        rounds_to_train=argv.rounds_to_train,
+        device=device,
+        save_checkpoints=save_checkpoints,
+        restore_from_checkpoint_folder = argv.restore_from_checkpoint_folder)
+    scores_dataframe
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
