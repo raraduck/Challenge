@@ -69,15 +69,33 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                                         collaborators_chosen_each_round,
                                         collaborator_times_per_round):
         # csv_file = argv.institution_split_csv_filename
-        
-        if fl_round >= 0:
-            n_nodes = 8
-        if fl_round >= 5:
-            n_nodes = 10
-        if fl_round >= 10:
-            n_nodes = 15
-        if fl_round >= 15:
-            n_nodes = 20
+        if argv.institution_split_csv_filename == 'partitioning_1.csv':
+            if fl_round >= 0:
+                n_nodes = 4
+            if fl_round >= 5:
+                n_nodes = 5
+            if fl_round >= 10:
+                n_nodes = 10
+            if fl_round >= 15:
+                n_nodes = 15
+        elif argv.institution_split_csv_filename == 'partitioning_2.csv':
+            if fl_round >= 0:
+                n_nodes = 8
+            if fl_round >= 5:
+                n_nodes = 10
+            if fl_round >= 10:
+                n_nodes = 15
+            if fl_round >= 15:
+                n_nodes = 20
+        else:
+            if fl_round >= 0:
+                n_nodes = 8
+            if fl_round >= 5:
+                n_nodes = 10
+            if fl_round >= 10:
+                n_nodes = 15
+            if fl_round >= 15:
+                n_nodes = 20
         # n_nodes = argv.n_nodes
 
         # node_ids = np.unique(np.array([int(el)//100 for el in collaborators])).tolist()
@@ -121,14 +139,33 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                                     fl_round,
                                     collaborators_chosen_each_round,
                                     collaborator_times_per_round):
-        if fl_round >= 0:
-            epochs_per_round = 4
-        if fl_round >= 5:
-            epochs_per_round = 3
-        if fl_round >= 10:
-            epochs_per_round = 3
-        if fl_round >= 15:
-            epochs_per_round = 2
+        if argv.institution_split_csv_filename == 'partitioning_1.csv':
+            if fl_round >= 0:
+                epochs_per_round = 4
+            if fl_round >= 5:
+                epochs_per_round = 3
+            if fl_round >= 10:
+                epochs_per_round = 3
+            if fl_round >= 15:
+                epochs_per_round = 2
+        elif argv.institution_split_csv_filename == 'partitioning_2.csv':
+            if fl_round >= 0:
+                epochs_per_round = 4
+            if fl_round >= 5:
+                epochs_per_round = 3
+            if fl_round >= 10:
+                epochs_per_round = 3
+            if fl_round >= 15:
+                epochs_per_round = 2
+        else:
+            if fl_round >= 0:
+                epochs_per_round = 4
+            if fl_round >= 5:
+                epochs_per_round = 3
+            if fl_round >= 10:
+                epochs_per_round = 3
+            if fl_round >= 15:
+                epochs_per_round = 2
 
         learning_rate = 1e-3
         
