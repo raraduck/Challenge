@@ -69,6 +69,7 @@ def train_val_split(subdirs, percent_train, shuffle=True):
     assert len(subdirs) + len(train_subdirs) == n_subdirs
 
     if shuffle:
+        np.random.seed(len(subdirs))
         np.random.shuffle(subdirs)
         
     cutpoint = int(n_subdirs * percent_train) - len(train_subdirs)
