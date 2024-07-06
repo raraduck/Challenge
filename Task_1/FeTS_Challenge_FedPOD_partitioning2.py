@@ -61,7 +61,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             if fl_round >= 10:
                 n_nodes = 10
             if fl_round >= 15:
-                n_nodes = 15
+                n_nodes = 12
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             if fl_round >= 0:
                 n_nodes = 6
