@@ -8,3 +8,4 @@ Task_1/cert/
 Task_1/fets_challenge.egg-info/
 output.log
 *.sh
+*.log
