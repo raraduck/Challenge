@@ -268,7 +268,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             
             weight = [t.weight for t in local_tensors]
             
-            VPID = [0.45*w+0.1*m+0.45*k for (w, m, k) in zip(weight, integ, deriv)]
+            VPID = [0.1*w+0.1*m+0.8*k for (w, m, k) in zip(weight, integ, deriv)]
 
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=VPID, axis=0)
