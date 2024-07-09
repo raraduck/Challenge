@@ -233,6 +233,8 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=weight, axis=0)
         else:
+            weight = [t.weight for t in local_tensors]
+
             col_names = [t.col_name for t in local_tensors]
             # 검색 조건 설정
             pre_tags = [(el, 'metric', 'validate_agg') for el in collaborators_chosen_each_round[fl_round]]
@@ -247,6 +249,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                 (tensor_db['origin'] == 'aggregator')
             ]
             pre_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in pre_df.iterrows()}
+            
             post_df = tensor_db[
                 (tensor_db['tensor_name'] == 'valid_loss') &
                 (tensor_db['round'] == (fl_round)) &
@@ -255,20 +258,20 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             ]
             post_loss_dict = {row['tags'][0]: float(row['nparray']) for index, row in post_df.iterrows()}
 
-
             pre_cost = [pre_loss_dict[col_name] for col_name in col_names]
             post_cost = [post_loss_dict[col_name] for col_name in col_names]
+            
             deriv = [max(0, pre - post) for (pre, post) in zip(pre_cost, post_cost)]
+            deriv = [w*k for (w, k) in zip(weight, deriv)]
             total_deriv = sum(deriv) + 1e-10
             deriv = [el/total_deriv for el in deriv]
 
             integ = [min(pre, post) + (max(0, pre - post)/2) for (pre, post) in zip(pre_cost, post_cost)]
+            integ = [w*k for (w, k) in zip(weight, integ)]
             total_integ = sum(integ)
             integ = [el / total_integ for el in integ]
             
-            weight = [t.weight for t in local_tensors]
-            
-            VPID = [0.1*w+0.1*m+0.8*k for (w, m, k) in zip(weight, integ, deriv)]
+            VPID = [0.3*w+0.1*m+0.6*k for (w, m, k) in zip(weight, integ, deriv)]
 
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=VPID, axis=0)
