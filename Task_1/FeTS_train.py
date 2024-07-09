@@ -88,16 +88,26 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             if fl_round >= 15:
                 n_nodes = 12
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
+            # if fl_round >= 0:
+            #     n_nodes = 6
+            # if fl_round >= 5:
+            #     n_nodes = 8
+            # if fl_round >= 10:
+            #     n_nodes = 10
+            # if fl_round >= 15:
+            #     n_nodes = 15
+            # if fl_round >= 20:
+            #     n_nodes = 20
             if fl_round >= 0:
-                n_nodes = 6
+                n_nodes = 12
             if fl_round >= 5:
-                n_nodes = 8
-            if fl_round >= 10:
-                n_nodes = 10
-            if fl_round >= 15:
                 n_nodes = 15
-            if fl_round >= 20:
+            if fl_round >= 10:
+                n_nodes = 18
+            if fl_round >= 15:
                 n_nodes = 20
+            if fl_round >= 20:
+                n_nodes = 25
         elif argv.institution_split_csv_filename == 'partitioning_3.csv':
             if fl_round >= 0:
                 n_nodes = 6
@@ -129,9 +139,10 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         np.random.shuffle(major_np)
         np.random.shuffle(minor_np)
         major_list = major_np.tolist()
+        major_list = [*major_list, *major_list]
         minor_list = minor_np.tolist()
             
-        n_major = len(major_list) if n_nodes >= len(major_list) else n_nodes
+        n_major = len(major_list) if n_nodes > len(major_list) else n_nodes
         n_minor = max(0, n_nodes-len(major_list))
         nodes_selected = [
             *major_list[:n_major],
@@ -150,8 +161,12 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         subsets_selected = []
         for node_id in nodes_selected:
             subsets_of_node = subset_dict[node_id]
-            np.random.shuffle(subsets_of_node) 
-            subsets_selected = [*subsets_selected, int(subsets_of_node[0])]
+            np.random.shuffle(subsets_of_node)
+            for subset_id in subsets_of_node:
+                if int(subset_id) not in subsets_selected:
+                    subsets_selected = [*subsets_selected, int(subset_id)]
+                    break
+            # subsets_selected = [*subsets_selected, int(subsets_of_node[0])]
 
         return [str(el) for el in subsets_selected]
 
