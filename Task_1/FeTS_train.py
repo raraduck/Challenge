@@ -79,14 +79,24 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             if fl_round >= 15:
                 n_nodes = 12
         elif argv.institution_split_csv_filename == 'partitioning_1.csv':
+            # if fl_round >= 0:
+            #     n_nodes = 4
+            # if fl_round >= 5:
+            #     n_nodes = 5
+            # if fl_round >= 10:
+            #     n_nodes = 10
+            # if fl_round >= 15:
+            #     n_nodes = 12
             if fl_round >= 0:
-                n_nodes = 4
+                n_nodes = 6
             if fl_round >= 5:
-                n_nodes = 5
-            if fl_round >= 10:
                 n_nodes = 10
+            if fl_round >= 10:
+                n_nodes = 15
             if fl_round >= 15:
-                n_nodes = 12
+                n_nodes = 20
+            if fl_round >= 20:
+                n_nodes = 25
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             # if fl_round >= 0:
             #     n_nodes = 6
@@ -139,7 +149,12 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         np.random.shuffle(major_np)
         np.random.shuffle(minor_np)
         major_list = major_np.tolist()
-        major_list = [*major_list, *major_list]
+        if argv.institution_split_csv_filename == 'partitioning_1.csv':
+            major_list = [*major_list, *major_list, *major_list]
+        elif argv.institution_split_csv_filename == 'partitioning_2.csv':
+            major_list = [*major_list, *major_list]
+        else:
+            major_list = [*major_list, *major_list]
         minor_list = minor_np.tolist()
             
         n_major = len(major_list) if n_nodes > len(major_list) else n_nodes
