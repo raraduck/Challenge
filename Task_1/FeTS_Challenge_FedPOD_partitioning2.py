@@ -244,7 +244,9 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             total_integ = sum(integ)
             integ = [el / total_integ for el in integ]
             
-            VPID = [(0.2*w+0.1*m+0.7*k)*s for (s, w, m, k) in zip(switch, weight, integ, deriv)]
+            VPID = [(0.2*w+0.1*m+0.7*k) for (s, w, m, k) in zip(switch, weight, integ, deriv)]
+            # total_VPID = sum(VPID) + 1e-10
+            # VPID = [el/total_VPID for el in VPID]
 
             tensor_values = [t.tensor for t in local_tensors]
             return np.average(tensor_values, weights=VPID, axis=0)
@@ -312,7 +314,7 @@ if __name__ == '__main__':
     parser.add_argument('-W', '--workspace', type=str, default='workspace')
     parser.add_argument('-R', '--rounds_to_train', type=int, default=30)
     parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_2.csv')
-    parser.add_argument('-Z', '--z_score', type=float, default=2.20)
+    parser.add_argument('-Z', '--z_score', type=float, default=1.00)
     argv = parser.parse_args(sys.argv[1:])
     print(argv)
 
