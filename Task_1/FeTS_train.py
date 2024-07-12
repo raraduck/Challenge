@@ -109,11 +109,11 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             # if fl_round >= 20:
             #     n_nodes = 20
             if fl_round >= 0:
-                n_nodes = 12
+                n_nodes = 6
             if fl_round >= 5:
-                n_nodes = 15
+                n_nodes = 10
             if fl_round >= 10:
-                n_nodes = 18
+                n_nodes = 15
             if fl_round >= 15:
                 n_nodes = 20
             if fl_round >= 20:
@@ -208,21 +208,21 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             if fl_round >= 0:
                 epochs_per_round = 4
             if fl_round >= 5:
-                epochs_per_round = 3
+                epochs_per_round = 4
             if fl_round >= 10:
                 epochs_per_round = 3
             if fl_round >= 15:
-                epochs_per_round = 2
+                epochs_per_round = 3
             learning_rate = 1e-3
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             if fl_round >= 0:
                 epochs_per_round = 4
             if fl_round >= 5:
-                epochs_per_round = 3
+                epochs_per_round = 4
             if fl_round >= 10:
                 epochs_per_round = 3
             if fl_round >= 15:
-                epochs_per_round = 2
+                epochs_per_round = 3
             learning_rate = 1e-3
         elif argv.institution_split_csv_filename == 'partitioning_3.csv':
             if fl_round >= 0:
