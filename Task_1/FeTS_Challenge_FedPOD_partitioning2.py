@@ -64,14 +64,24 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             if fl_round >= 15:
                 n_nodes = 12
         elif argv.institution_split_csv_filename == 'partitioning_1.csv':
+            # if fl_round >= 0:
+            #     n_nodes = 4
+            # if fl_round >= 5:
+            #     n_nodes = 5
+            # if fl_round >= 10:
+            #     n_nodes = 10
+            # if fl_round >= 15:
+            #     n_nodes = 12
             if fl_round >= 0:
-                n_nodes = 4
+                n_nodes = 6
             if fl_round >= 5:
-                n_nodes = 5
-            if fl_round >= 10:
                 n_nodes = 10
+            if fl_round >= 10:
+                n_nodes = 15
             if fl_round >= 15:
-                n_nodes = 12
+                n_nodes = 20
+            if fl_round >= 20:
+                n_nodes = 25
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             # if fl_round >= 0:
             #     n_nodes = 6
@@ -84,11 +94,11 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             # if fl_round >= 20:
             #     n_nodes = 20
             if fl_round >= 0:
-                n_nodes = 12
+                n_nodes = 6
             if fl_round >= 5:
-                n_nodes = 15
+                n_nodes = 10
             if fl_round >= 10:
-                n_nodes = 18
+                n_nodes = 15
             if fl_round >= 15:
                 n_nodes = 20
             if fl_round >= 20:
@@ -124,7 +134,12 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         np.random.shuffle(major_np)
         np.random.shuffle(minor_np)
         major_list = major_np.tolist()
-        major_list = [*major_list, *major_list]
+        if argv.institution_split_csv_filename == 'partitioning_1.csv':
+            major_list = [*major_list, *major_list, *major_list]
+        elif argv.institution_split_csv_filename == 'partitioning_2.csv':
+            major_list = [*major_list, *major_list]
+        else:
+            major_list = [*major_list, *major_list]
         minor_list = minor_np.tolist()
             
         n_major = len(major_list) if n_nodes > len(major_list) else n_nodes
@@ -161,26 +176,52 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                                     fl_round,
                                     collaborators_chosen_each_round,
                                     collaborator_times_per_round):
-        if argv.institution_split_csv_filename == 'partitioning_1.csv':
+        if argv.institution_split_csv_filename == 'partitioning_0.csv':
+            if fl_round >= 0:
+                epochs_per_round = 4
+                learning_rate = 5e-3
+            if fl_round >= 5:
+                epochs_per_round = 4
+                learning_rate = 2e-3
+            if fl_round >= 10:
+                epochs_per_round = 3
+                learning_rate = 1e-3
+            if fl_round >= 15:
+                epochs_per_round = 3
+                learning_rate = 1e-3
+        elif argv.institution_split_csv_filename == 'partitioning_1.csv':
             if fl_round >= 0:
                 epochs_per_round = 4
             if fl_round >= 5:
-                epochs_per_round = 3
+                epochs_per_round = 4
             if fl_round >= 10:
                 epochs_per_round = 3
             if fl_round >= 15:
-                epochs_per_round = 2
+                epochs_per_round = 3
             learning_rate = 1e-3
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             if fl_round >= 0:
                 epochs_per_round = 4
             if fl_round >= 5:
-                epochs_per_round = 3
+                epochs_per_round = 4
             if fl_round >= 10:
                 epochs_per_round = 3
             if fl_round >= 15:
-                epochs_per_round = 2
+                epochs_per_round = 3
             learning_rate = 1e-3
+        elif argv.institution_split_csv_filename == 'partitioning_3.csv':
+            if fl_round >= 0:
+                epochs_per_round = 4
+                learning_rate = 5e-3
+            if fl_round >= 5:
+                epochs_per_round = 4
+                learning_rate = 2e-3
+            if fl_round >= 10:
+                epochs_per_round = 3
+                learning_rate = 1e-3
+            if fl_round >= 15:
+                epochs_per_round = 3
+                learning_rate = 1e-3
         else:
             if fl_round >= 0:
                 epochs_per_round = 4
@@ -192,6 +233,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                 epochs_per_round = 2
             learning_rate = 1e-3
 
+        
         return (learning_rate, epochs_per_round)
 
     def FedPOD_aggregation(local_tensors,
@@ -235,16 +277,22 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
             
             switch = [1 if pre > post else 0 for (pre, post) in zip(pre_cost, post_cost)]
             deriv = [max(0, pre - post) for (pre, post) in zip(pre_cost, post_cost)]
+
             deriv = [w*k for (w, k) in zip(weight, deriv)]
             total_deriv = sum(deriv) + 1e-10
             deriv = [el/total_deriv for el in deriv]
 
+            # deriv = np.average(deriv, weights=weight, axis=0)
+
             integ = [min(pre, post) + (max(0, pre - post)/2) for (pre, post) in zip(pre_cost, post_cost)]
+
             integ = [w*m for (w, m) in zip(weight, integ)]
             total_integ = sum(integ)
             integ = [el / total_integ for el in integ]
             
-            VPID = [(0.2*w+0.1*m+0.7*k) for (s, w, m, k) in zip(switch, weight, integ, deriv)]
+            # integ = np.average(integ, weights=weight, axis=0)
+            
+            VPID = [0.2*w+0.1*m+0.7*k for (w, m, k) in zip(weight, integ, deriv)]
             # total_VPID = sum(VPID) + 1e-10
             # VPID = [el/total_VPID for el in VPID]
 
@@ -314,7 +362,7 @@ if __name__ == '__main__':
     parser.add_argument('-W', '--workspace', type=str, default='workspace')
     parser.add_argument('-R', '--rounds_to_train', type=int, default=30)
     parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_2.csv')
-    parser.add_argument('-Z', '--z_score', type=float, default=1.00)
+    parser.add_argument('-Z', '--z_score', type=float, default=-1.50)
     argv = parser.parse_args(sys.argv[1:])
     print(argv)
 
