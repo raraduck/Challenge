@@ -362,7 +362,7 @@ if __name__ == '__main__':
     parser.add_argument('-W', '--workspace', type=str, default='workspace')
     parser.add_argument('-R', '--rounds_to_train', type=int, default=30)
     parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_1.csv')
-    parser.add_argument('-Z', '--z_score', type=float, default=-2.00)
+    parser.add_argument('-Z', '--z_score', type=float, default=-3.50)
     argv = parser.parse_args(sys.argv[1:])
     print(argv)
 
