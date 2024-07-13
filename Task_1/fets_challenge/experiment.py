@@ -28,7 +28,7 @@ from .checkpoint_utils import setup_checkpoint_folder, save_checkpoint, load_che
 # HOUR = 60 * MINUTE
 # DAY = 24 * HOUR
 # WEEK = 7 * DAY
-MAX_SIMULATION_TIME = 5 * 7 * 24 * 60 * 60 
+MAX_SIMULATION_TIME = 7 * 24 * 60 * 60 
 
 ## COLLABORATOR TIMING DISTRIBUTIONS
 # These data are derived from the actual timing information in the real-world FeTS information
@@ -551,9 +551,9 @@ def run_challenge_experiment(aggregation_function,
         # in practice, this means that the previous round's model is the last model scored,
         # so a long final round should not actually benefit the competitor, since that final
         # model is never globally validated
-        if total_simulated_time > MAX_SIMULATION_TIME:
-            logger.info("Simulation time exceeded. Ending Experiment")
-            break
+        # if total_simulated_time > MAX_SIMULATION_TIME:
+        #     logger.info("Simulation time exceeded. Ending Experiment")
+        #     break
 
         # save the most recent aggregated model in native format to be copied over as best when appropriate
         # (note this model has not been validated by the collaborators yet)
