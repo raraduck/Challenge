@@ -207,23 +207,29 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         elif argv.institution_split_csv_filename == 'partitioning_1.csv':
             if fl_round >= 0:
                 epochs_per_round = 4
+                learning_rate = 1e-3
             if fl_round >= 5:
                 epochs_per_round = 4
+                learning_rate = 1e-3
             if fl_round >= 10:
                 epochs_per_round = 3
+                learning_rate = 5e-4
             if fl_round >= 15:
                 epochs_per_round = 3
-            learning_rate = 1e-3
+                learning_rate = 1e-4
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             if fl_round >= 0:
                 epochs_per_round = 4
+                learning_rate = 1e-3
             if fl_round >= 5:
                 epochs_per_round = 4
+                learning_rate = 1e-3
             if fl_round >= 10:
                 epochs_per_round = 3
+                learning_rate = 5e-4
             if fl_round >= 15:
                 epochs_per_round = 3
-            learning_rate = 1e-3
+                learning_rate = 1e-4
         elif argv.institution_split_csv_filename == 'partitioning_3.csv':
             if fl_round >= 0:
                 epochs_per_round = 4
