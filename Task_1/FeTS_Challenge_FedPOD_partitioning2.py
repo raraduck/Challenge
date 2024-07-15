@@ -76,15 +76,15 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                 n_nodes = 15
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             if fl_round >= 0:
-                n_nodes = 6
-            if fl_round >= 5:
-                n_nodes = 8
-            if fl_round >= 10:
                 n_nodes = 10
-            if fl_round >= 15:
+            if fl_round >= 5:
                 n_nodes = 12
-            if fl_round >= 20:
+            if fl_round >= 10:
                 n_nodes = 15
+            if fl_round >= 15:
+                n_nodes = 18
+            if fl_round >= 20:
+                n_nodes = 20
         elif argv.institution_split_csv_filename == 'partitioning_3.csv':
             if fl_round >= 0:
                 n_nodes = 6
@@ -344,7 +344,7 @@ if __name__ == '__main__':
     parser.add_argument('-W', '--workspace', type=str, default='workspace')
     parser.add_argument('-R', '--rounds_to_train', type=int, default=30)
     parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_2.csv')
-    parser.add_argument('-Z', '--z_score', type=float, default=-1.50)
+    parser.add_argument('-Z', '--z_score', type=float, default=-2.00)
     argv = parser.parse_args(sys.argv[1:])
     print(argv)
 
