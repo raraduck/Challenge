@@ -26,15 +26,16 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     df['Partition_ID'] = df['Partition_ID'].astype(str)
     original_x100_unique_IDs = df['Partition_ID'].unique()
 
+    primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_ + (1.96 * std_)]
+    secondary_group = [int(el) for el in original_unique_IDs if el not in primary_group]
     for pid in original_x100_unique_IDs:
         indices = df[df['Partition_ID'] == pid].index
-        df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
+        pid = int(pid)
+        if pid in [el*100 for el in primary_group]:
+            df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
 
     subset_x100_unique_IDs = df['Partition_ID'].unique()
 
-    primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_ + (1.96 * std_)]
-
-    secondary_group = [int(el) for el in original_unique_IDs if el not in primary_group]
     subset_dict = {k:[el for el in subset_x100_unique_IDs if int(k) == int(el)//100] for k in original_unique_IDs}
     primary_subset_dict = {k:v for k,v in subset_dict.items() if k in primary_group}
     for orig,subs in primary_subset_dict.items():
@@ -119,7 +120,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         if argv.institution_split_csv_filename == 'partitioning_1.csv':
             major_list = [*major_list, *major_list, *major_list]
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
-            major_list = [*major_list, *major_list]
+            major_list = [*major_list]
         else:
             major_list = [*major_list, *major_list]
         minor_list = minor_np.tolist()

@@ -30,7 +30,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     # print(f"original_x100_unique_IDs({len(original_x100_unique_IDs)}): {original_x100_unique_IDs}")
 
     # node_ids = np.unique(np.array([int(el)//100 for el in unique_values])).tolist()
-    primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_]
+    primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_ + (1.96 * std_)]
     # print(f"primary_group({len(primary_group)}): {primary_group}")
 
     secondary_group = [int(el) for el in original_unique_IDs if el not in primary_group]

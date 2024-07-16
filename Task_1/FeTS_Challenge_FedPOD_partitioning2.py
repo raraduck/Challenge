@@ -26,15 +26,16 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     df['Partition_ID'] = df['Partition_ID'].astype(str)
     original_x100_unique_IDs = df['Partition_ID'].unique()
 
+    primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_ + (1.96 * std_)]
+    secondary_group = [int(el) for el in original_unique_IDs if el not in primary_group]
     for pid in original_x100_unique_IDs:
         indices = df[df['Partition_ID'] == pid].index
-        df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
+        pid = int(pid)
+        if pid in [el*100 for el in primary_group]:
+            df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
 
     subset_x100_unique_IDs = df['Partition_ID'].unique()
 
-    primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_ + (1.96 * std_)]
-
-    secondary_group = [int(el) for el in original_unique_IDs if el not in primary_group]
     subset_dict = {k:[el for el in subset_x100_unique_IDs if int(k) == int(el)//100] for k in original_unique_IDs}
     primary_subset_dict = {k:v for k,v in subset_dict.items() if k in primary_group}
     for orig,subs in primary_subset_dict.items():
@@ -344,7 +345,7 @@ if __name__ == '__main__':
     parser.add_argument('-W', '--workspace', type=str, default='workspace')
     parser.add_argument('-R', '--rounds_to_train', type=int, default=30)
     parser.add_argument('-F', '--institution_split_csv_filename', type=str, default='partitioning_2.csv')
-    parser.add_argument('-Z', '--z_score', type=float, default=-1.75)
+    parser.add_argument('-Z', '--z_score', type=float, default=-1.30)
     argv = parser.parse_args(sys.argv[1:])
     print(argv)
 
