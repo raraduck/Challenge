@@ -47,7 +47,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     # subset_dict = {}
     # for original_ID in original_unique_IDs:
     #     subset_dict[original_ID] = [el for el in subset_group if int(original_ID) == int(el)//100]
-    subset_dict = {k:[el for el in subset_x100_unique_IDs if int(k) == int(el)//100] for k in original_unique_IDs}
+    subset_dict = {k:[el for el in subset_x100_unique_IDs if (int(k) == int(el)//100) and int(el)//100 in primary_group] for k in original_unique_IDs}
     # print(subset_dict)
     primary_subset_dict = {k:v for k,v in subset_dict.items() if k in primary_group}
     for orig,subs in primary_subset_dict.items():
