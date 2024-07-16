@@ -134,7 +134,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         if argv.institution_split_csv_filename == 'partitioning_1.csv':
             major_list = [*major_list, *major_list, *major_list]
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
-            major_list = [*major_list, *major_list]
+            major_list = [*major_list]
         else:
             major_list = [*major_list, *major_list]
         minor_list = minor_np.tolist()
