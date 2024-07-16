@@ -29,25 +29,27 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     original_x100_unique_IDs = df['Partition_ID'].unique()
     # print(f"original_x100_unique_IDs({len(original_x100_unique_IDs)}): {original_x100_unique_IDs}")
 
-    for pid in original_x100_unique_IDs:
-        indices = df[df['Partition_ID'] == pid].index
-        df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
-
-    subset_x100_unique_IDs = df['Partition_ID'].unique()
-    # print(f"subset_x100_unique_IDs({len(subset_x100_unique_IDs)}): {subset_x100_unique_IDs}")
-
     # node_ids = np.unique(np.array([int(el)//100 for el in unique_values])).tolist()
     primary_group = [int(el) for el in original_unique_IDs if frequency.loc[el] > lambda_]
     # print(f"primary_group({len(primary_group)}): {primary_group}")
 
     secondary_group = [int(el) for el in original_unique_IDs if el not in primary_group]
+
+    for pid in original_x100_unique_IDs:
+        indices = df[df['Partition_ID'] == pid].index
+        if pid in [el*100 for el in primary_group]:
+            df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
+
+    subset_x100_unique_IDs = df['Partition_ID'].unique()
+    # print(f"subset_x100_unique_IDs({len(subset_x100_unique_IDs)}): {subset_x100_unique_IDs}")
+
     # print(f"secondary_group({len(secondary_group)}): {secondary_group}")
 
     # print(f'subset_group: {subset_group}')
     # subset_dict = {}
     # for original_ID in original_unique_IDs:
     #     subset_dict[original_ID] = [el for el in subset_group if int(original_ID) == int(el)//100]
-    subset_dict = {k:[el for el in subset_x100_unique_IDs if (int(k) == int(el)//100) and (int(el)//100) in primary_group] for k in original_unique_IDs}
+    subset_dict = {k:[el for el in subset_x100_unique_IDs if (int(k) == int(el)//100)] for k in original_unique_IDs}
     # print(subset_dict)
     primary_subset_dict = {k:v for k,v in subset_dict.items() if k in primary_group}
     for orig,subs in primary_subset_dict.items():
