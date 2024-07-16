@@ -38,13 +38,13 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
     for pid in original_x100_unique_IDs:
         indices = df[df['Partition_ID'] == pid].index
         pid = int(pid)
-        print(pid, [el*100 for el in primary_group], pid in [el*100 for el in primary_group], type(pid))
+        # print(pid, [el*100 for el in primary_group], pid in [el*100 for el in primary_group], type(pid))
         if pid in [el*100 for el in primary_group]:
             df.loc[indices, 'Partition_ID'] = [str(int(pid) + i // subset_size) for i in range(len(indices))]
     # exit(0)
     subset_x100_unique_IDs = df['Partition_ID'].unique()
-    print(subset_x100_unique_IDs)
-    exit(0)
+    # print(subset_x100_unique_IDs)
+    # exit(0)
     # print(f"subset_x100_unique_IDs({len(subset_x100_unique_IDs)}): {subset_x100_unique_IDs}")
 
     # print(f"secondary_group({len(secondary_group)}): {secondary_group}")
