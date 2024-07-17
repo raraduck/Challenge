@@ -66,15 +66,15 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
                 n_nodes = 12
         elif argv.institution_split_csv_filename == 'partitioning_1.csv':
             if fl_round >= 0:
-                n_nodes = 6
-            if fl_round >= 5:
                 n_nodes = 8
-            if fl_round >= 10:
+            if fl_round >= 5:
                 n_nodes = 10
-            if fl_round >= 15:
+            if fl_round >= 10:
                 n_nodes = 12
-            if fl_round >= 20:
+            if fl_round >= 15:
                 n_nodes = 15
+            if fl_round >= 20:
+                n_nodes = 18
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
             if fl_round >= 0:
                 n_nodes = 8
@@ -120,7 +120,7 @@ def main(argv, trg_folder, trg_path, brats_training_data_parent_dir):
         if argv.institution_split_csv_filename == 'partitioning_1.csv':
             major_list = [*major_list, *major_list, *major_list]
         elif argv.institution_split_csv_filename == 'partitioning_2.csv':
-            major_list = [*major_list, *major_list]
+            major_list = [*major_list]
         else:
             major_list = [*major_list, *major_list]
         minor_list = minor_np.tolist()
